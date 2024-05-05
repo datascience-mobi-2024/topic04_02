@@ -4,7 +4,7 @@ def rel_aa_comp(Sequence:str, AA_property:str) -> list:
     for element in Sequence:  
         if element in AA_property:
             count += 1
-    return count/len(Sequence)
+    return count
 
 def rel_aa(Sequence:str, AA_property:str) -> list: 
     count = 0
