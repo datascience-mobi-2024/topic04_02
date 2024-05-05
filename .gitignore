@@ -1,3 +1,4 @@
 # ignores all files in the data directory
 /data 
 /Bioinfo_data_extracted
+/__pycache__
