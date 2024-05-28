@@ -1,6 +1,8 @@
 # ignores all files in the data directory
 /data 
 /Bioinfo_data_extracted
+/s4pred
+
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,jupyternotebooks,windows,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python,jupyternotebooks,windows,macos
 
