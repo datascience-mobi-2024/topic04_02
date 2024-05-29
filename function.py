@@ -14,6 +14,7 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
     return count
 
 def salt_bridge(path, pdb_files=None):
+    import numpy as np
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
