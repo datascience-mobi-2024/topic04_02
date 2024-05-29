@@ -2,6 +2,7 @@
 /data 
 /Bioinfo_data_extracted
 /__pycache__
+/s4pred
 /.venv
 /.zip
 /.png
