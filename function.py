@@ -15,6 +15,9 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
 
 def salt_bridge(path, pdb_files=None):
     import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
