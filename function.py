@@ -25,8 +25,6 @@ def salt_bridge(path, pdb_files=None):
         
         with open(os.path.join(path, str(pdb_file))) as f:
             Salt= dict()
-            Asp_Glu_array = np.empty((0,4))
-            Lys_Arg_His_array = np.empty((0,4))
             for line in f:
                 line = line.strip()
                 if line.startswith('ATOM'):
