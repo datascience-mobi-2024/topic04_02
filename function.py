@@ -22,9 +22,8 @@ def salt_bridge(path, pdb_files=None):
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
         pdb_files = [pdb_files]
-        
+    Salt_bridges = dict()
     for pdb_file in pdb_files:
-        Salt_bridges = dict()
         Asp_Glu_array = np.empty((0, 4))
         Lys_Arg_His_array = np.empty((0, 4))
         
