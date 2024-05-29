@@ -4,6 +4,7 @@
 /__pycache__
 /.venv
 /.zip
+/.png
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,jupyternotebooks,windows,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python,jupyternotebooks,windows,macos
 
