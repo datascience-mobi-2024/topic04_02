@@ -20,7 +20,7 @@ def distance (array1, array2, cutoff, remove_nan=True):
     distance = np.concatenate((np.array([array2[:,0]]), distance), axis=0) #add atom number from  array2
     distance = np.concatenate((np.insert(np.array([array1[:,0]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from array1
     distance[1:, 1:][distance[1:, 1:] > cutoff] = np.nan #set distance > cutoff to nan
-    if remove_nan = True:
+    if remove_nan == True:
         rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None)
         rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
         cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
