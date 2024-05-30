@@ -17,7 +17,7 @@ def distance (array1, array2, cutoff):
     from scipy.spatial.distance import cdist
     import numpy as np
     distance = cdist(array1[:,1:], array2[:,1:], metric='euclidean') #calculate distance
-    distance = np.concatenate((np.array([array2[:,0:1]]), distance), axis=0) #add atom number from  array2
+    distance = np.concatenate((np.array([array2[:,0]]), distance), axis=0) #add atom number from  array2
     distance = np.concatenate((np.insert(np.array([array1[:,0]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from array1
     distance[1:, 1:][distance[1:, 1:] > cutoff] = np.nan #set distance > cutoff to nan
     rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
