@@ -78,19 +78,19 @@ def univt2(seq:str, size:float):
     counth=0
     counts=0
     countt=0
-    for p in range(1,len(helic)-2):
+    for p in range(1,len(helic)-n):
         if helic[p+2]==helic[p]+2 and helic[p-1]!=helic[p]-1:
             counth+=1
     if len(helic) > 2:
         if helic[2] == helic[0]+2:
             counth+=1
-    for n in range(1,len(sheet)-2):
+    for n in range(1,len(sheet)-n):
         if sheet[n+2]==sheet[n]+2 and sheet[n-1]!=sheet[n]-1:
             counts+=1
     if len(sheet) >= 2:
         if sheet[2] == sheet[0]+2:
             counts+=1
-    for s in range(1,len(turn)-2):
+    for s in range(1,len(turn)-n):
         if turn[s+2]==turn[s]+2 and turn[s-1]!=turn[s]-1:
             countt+=1
     if len(turn) > 2:
