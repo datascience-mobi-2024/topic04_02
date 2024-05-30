@@ -13,6 +13,8 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
             count += 1
     return count
 
+
+#https://www.bioinformation.net/003/002800032008.pdf
 def salt_bridge(path, pdb_files=None):
     import numpy as np
     import os
