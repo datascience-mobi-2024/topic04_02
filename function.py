@@ -16,15 +16,16 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
 def distance (array1, array2, cutoff):
     from scipy.spatial.distance import cdist
     import numpy as np
-    distance = cdist(array1[:,2:], array2[:,2:], metric='euclidean') #calculate distance
+    distance = cdist(array1[:,1:], array2[:,1:], metric='euclidean') #calculate distance
     distance = np.concatenate((np.array([array2[:,0:1]]), distance), axis=0) #add atom number from  array2
-    distance = np.concatenate((np.insert(np.array([array1[:,0:1]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from array1
+    distance = np.concatenate((np.insert(np.array([array1[:,0]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from array1
     distance[2:, 2:][distance[2:, 2:] > cutoff] = np.nan #set distance > cutoff to nan
-    rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[2:, 2:]), axis=1)]),0, None) #find rows with all nan values
-    cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[2:, 2:]), axis=0)]),0, None) #find columns with all nan values
+    rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
+    cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
     distance = distance[~rows_with_nan, :] #delete rows with all nan values
     distance = distance[:, ~cols_with_nan] #delete columns with all nan values
     return distance
+
 
 #https://www.bioinformation.net/003/002800032008.pdf
 def salt_bridge(path, pdb_files=None):
