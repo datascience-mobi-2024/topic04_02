@@ -13,7 +13,6 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
             count += 1
     return count
 
-<<<<<<< HEAD
 
 #https://www.bioinformation.net/003/002800032008.pdf
 def salt_bridge(path, pdb_files=None):
@@ -55,7 +54,6 @@ def salt_bridge(path, pdb_files=None):
             Salt_bridges[str(pdb_file).split('-')[1]] = distance
 
     return Salt_bridges
-=======
 #function for predicting alpha helices, beta sheets and turns, turns not tested yet, helices and sheets testes on one protein, worked, more to come, improvements will follow
 #depends on dicts:
 helixvalues = {'E':1.59,'A':1.41,'L':1.34,'M':1.3,'Q':1.27,'K':1.23,'R':1.21,'H':1.05,'V':0.9,'I':1.09,'Y':0.74,'C':0.66,'W':1.02,'F':1.16,'T':0.76,'G':0.43,'N':0.76,'P':0.34,'S':0.57,'D':0.99,'U':0.66}
@@ -148,4 +146,3 @@ def univt3(seq:str):
     print(f'Sheets:{counts}')
     print(f'Turns:{countt} (Nicht getestet)')'''
         
->>>>>>> tobi2
