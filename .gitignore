@@ -2,7 +2,11 @@
 /data 
 /Bioinfo_data_extracted
 /__pycache__
-/s4pred 
+/s4pred
+/.venv
+/.zip
+/.png
+/nardini-data-DGVZYOSFR5.zip
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,jupyternotebooks,windows,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python,jupyternotebooks,windows,macos
 
