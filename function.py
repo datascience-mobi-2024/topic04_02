@@ -14,6 +14,7 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
     return count
 
 def distance (array1, array2, cutoff):
+    from scipy.spatial.distance import cdist
     distance = cdist(array1[:,2:], array2[:,2:], metric='euclidean') #calculate distance
     distance = np.concatenate((np.array([array2[:,0:1]]), distance), axis=0) #add atom number from  array2
     distance = np.concatenate((np.insert(np.array([array1[:,0:1]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from array1
@@ -30,8 +31,6 @@ def salt_bridge(path, pdb_files=None):
     import os
     import scipy
     from scipy.spatial.distance import cdist
-    
-    
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
