@@ -32,11 +32,11 @@ def salt_bridge(path, pdb_files=None):
                 line = line.strip()
                 if line.startswith('ATOM'):
                     if ('ASP' in line and 'OD' in line) or ('GLU' in line and 'OE' in line):
-                        line_array = np.array([[line[8:11].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
                         line_array = line_array.astype('float64')
                         Asp_Glu_array = np.append(Asp_Glu_array, line_array, axis = 0)
                     if ('LYS' in line and 'NZ' in line) or ('ARG' in line and 'NH' in line) or ('HIS' in line and 'NE' in line) or ('HIS' in line and 'ND' in line):
-                        line_array = np.array([[line[8:11].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
                         line_array = line_array.astype('float64')
                         Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
 
