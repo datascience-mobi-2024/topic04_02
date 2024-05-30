@@ -13,6 +13,16 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
             count += 1
     return count
 
+def distance (array1, array2, cutoff):
+    distance = cdist(array1[:,2:], array2[:,2:], metric='euclidean') #calculate distance
+    distance = np.concatenate((np.array([array2[:,0:1]]), distance), axis=0) #add atom number from  array2
+    distance = np.concatenate((np.insert(np.array([array1[:,0:1]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from array1
+    distance[2:, 2:][distance[2:, 2:] > cutoff] = np.nan #set distance > cutoff to nan
+    rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[2:, 2:]), axis=1)]),0, None) #find rows with all nan values
+    cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[2:, 2:]), axis=0)]),0, None) #find columns with all nan values
+    distance = distance[~rows_with_nan, :] #delete rows with all nan values
+    distance = distance[:, ~cols_with_nan] #delete columns with all nan values
+    return distance
 
 #https://www.bioinformation.net/003/002800032008.pdf
 def salt_bridge(path, pdb_files=None):
@@ -44,7 +54,10 @@ def salt_bridge(path, pdb_files=None):
                         line_array = line_array.astype('float64')
                         Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
 
-            #calculate distance clean up array
+            from function import distance
+            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
+    return Salt_bridges
+"""             #calculate distance clean up array
             distance = cdist(Asp_Glu_array[:,1:], Lys_Arg_His_array[:,1:], metric='euclidean') #calculate distance
             distance = np.concatenate((np.array([Lys_Arg_His_array[:,0]]), distance), axis=0) #add atom number from Lys_Arg_His to array
             distance = np.concatenate((np.insert(np.array([Asp_Glu_array[:,0]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from Asp_Glu to array
@@ -53,9 +66,7 @@ def salt_bridge(path, pdb_files=None):
             cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
             distance = distance[~rows_with_nan, :] #delete rows with all nan values
             distance = distance[:, ~cols_with_nan] #delete columns with all nan values
-            Salt_bridges[str(pdb_file).split('-')[1]] = distance
-
-    return Salt_bridges
+            Salt_bridges[str(pdb_file).split('-')[1]] = distance """
 
 
 
