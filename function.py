@@ -146,3 +146,10 @@ def univt3(seq:str):
     print(f'Sheets:{counts}')
     print(f'Turns:{countt} (Nicht getestet)')'''
         
+def p_val(corr, n, alpha):
+    import math
+    import scipy.stats as stats
+    if math.sqrt((1-(corr**2))/(n-2)) != 0 and n-2 != 0:
+        t = (corr)/(math.sqrt((1-(corr**2))/(n-2)))
+        p = 1 - stats.t.cdf(t, n-2)
+        return [p, p < alpha]
