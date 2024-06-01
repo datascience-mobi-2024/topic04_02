@@ -39,7 +39,7 @@ def intersect_vol_import():
     from function import intersect_vol
     return  
  
-def intersect_vol(array:np.array, r1:str, r2:str):
+def intersect_vol(array, r1:str, r2:str):
     import numpy as np
     r1 = float(r1)
     r2 = float(r2)
@@ -125,7 +125,7 @@ def VdW_interaction(path, pdb_files=None):
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
             VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_distance
-            from function import intersect_vol_import
+            from function import intersect_vol
             Atom_volume = intersect_vol(Atom_distance, 6, 6)
             
             VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_volume
