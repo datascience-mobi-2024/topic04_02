@@ -105,7 +105,7 @@ def salt_bridge(path, pdb_files=None):
     return Salt_bridges
 
 
-def VdW_interaction(path, pdb_files=None, output = 'volume' ' cluster' False):
+def VdW_interaction(path, pdb_files=None, output = None):
     import numpy as np
     import os
     import scipy
