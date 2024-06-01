@@ -50,11 +50,14 @@ def cluster_calc(array):
   from scipy.sparse.csgraph import connected_components
   from scipy.sparse import lil_matrix
   n_atoms = len(array)
-  adjacency_matrix = lil_matrix((int(len(array))-1, int(len(array))-1))
+  adjacency_matrix = lil_matrix((len(array)), len(array))
+  for i in range(len(array)):
+    adjacency_matrix[0,i] = array[0,i]
+    adjacency_matrix[i,0] = array[i,0]
   for i in range(1, len(array)):
     for j in range(i+1, len(array)):
       overlap_volume = array[i, j]
-      adjacency_matrix[i-1, j-1] = overlap_volume
+      adjacency_matrix[i, j] = overlap_volume
   
   adjacency_matrix = adjacency_matrix.tocsr()
   labels, n_components = connected_components(adjacency_matrix, directed=False)
@@ -66,7 +69,7 @@ def cluster_calc(array):
     atom_number = []
     for n in range(len(list_components)):
       if list_components[n] == i:
-        atom_number.append(adjacency_matrix[list_components[0],n])   
+        atom_number.append(adjacency_matrix[list_components[0],n+1])   
         Cluster[f'Cluster {str(i)}'] = atom_number
   return Cluster
 
