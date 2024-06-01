@@ -34,7 +34,11 @@ def distance (array1, array2, cutoff, remove_nan=True):
         return distance
     else:
         raise ValueError('remove_nan must be either True or False')
-    
+def intersect_vol():
+    import numpy as np
+    from function import VdW_interaction
+    return  
+ 
 def intersect_vol(array:np.array, r1:str, r2:str):
     import numpy as np
     r1 = float(r1)
@@ -77,6 +81,7 @@ def salt_bridge(path, pdb_files=None):
             from function import distance
             Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
     return Salt_bridges
+
 
 def VdW_interaction(path, pdb_files=None):
     import numpy as np
