@@ -49,8 +49,7 @@ def cluster_calc(array):
   Cluster ={}
   from scipy.sparse.csgraph import connected_components
   from scipy.sparse import lil_matrix
-  n_atoms = len(array)
-  adjacency_matrix = lil_matrix((len(array)), len(array))
+  adjacency_matrix = lil_matrix((int(len(array))), int(len(array)))
   for i in range(len(array)):
     adjacency_matrix[0,i] = array[0,i]
     adjacency_matrix[i,0] = array[i,0]
