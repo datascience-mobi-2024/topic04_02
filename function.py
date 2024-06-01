@@ -34,9 +34,9 @@ def distance (array1, array2, cutoff, remove_nan=True):
         return distance
     else:
         raise ValueError('remove_nan must be either True or False')
-def intersect_vol():
+def intersect_vol_import():
     import numpy as np
-    from function import VdW_interaction
+    from function import intersect_vol
     return  
  
 def intersect_vol(array:np.array, r1:str, r2:str):
@@ -125,7 +125,7 @@ def VdW_interaction(path, pdb_files=None):
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
             VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_distance
-            from function import intersect_vol
+            from function import intersect_vol_import
             Atom_volume = intersect_vol(Atom_distance, 6, 6)
             
             VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_volume
