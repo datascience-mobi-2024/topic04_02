@@ -34,10 +34,7 @@ def distance (array1, array2, cutoff, remove_nan=True):
         return distance
     else:
         raise ValueError('remove_nan must be either True or False')
-def intersect_vol_import():
-    import numpy as np
-    from function import intersect_vol
-    return  
+
  
 def intersect_vol(array, r1:str, r2:str):
     import numpy as np
@@ -47,6 +44,31 @@ def intersect_vol(array, r1:str, r2:str):
     d = array[1:,1:]
     vol[1:,1:] = (np.pi*(r2+r1-d)**2 * (d**2 + 2*d*r1 - 3*r1**2 + 2*d*r2 + 6*r1*r2 - 3*r2**2))/(12*d)
     return vol
+
+def cluster_calc(array):
+  Cluster ={}
+  from scipy.sparse.csgraph import connected_components
+  from scipy.sparse import lil_matrix
+  n_atoms = len(array)
+  adjacency_matrix = lil_matrix((int(len(array))-1, int(len(array))-1))
+  for i in range(1, len(array)):
+    for j in range(i+1, len(array)):
+      overlap_volume = array[i, j]
+      adjacency_matrix[i-1, j-1] = overlap_volume
+  
+  adjacency_matrix = adjacency_matrix.tocsr()
+  labels, n_components = connected_components(adjacency_matrix, directed=False)
+  
+  set_components = set(n_components) #unique number of clusters
+  list_components = n_components.tolist()
+  
+  for i in range(len(set_components)):
+    atom_number = []
+    for n in range(len(list_components)):
+      if list_components[n] == i:
+        atom_number.append(adjacency_matrix[list_components[0],n])   
+        Cluster[f'Cluster {str(i)}'] = atom_number
+  return Cluster
 
 
 #https://www.bioinformation.net/003/002800032008.pdf
@@ -83,7 +105,7 @@ def salt_bridge(path, pdb_files=None):
     return Salt_bridges
 
 
-def VdW_interaction(path, pdb_files=None):
+def VdW_interaction(path, pdb_files=None, output = 'volume' ' cluster' False):
     import numpy as np
     import os
     import scipy
@@ -93,8 +115,6 @@ def VdW_interaction(path, pdb_files=None):
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
         pdb_files = [pdb_files]
-    VdW_dictionary = dict()
-    
     for pdb_file in pdb_files:
         with open(os.path.join(path, str(pdb_file))) as f:
             Atom_array = np.empty((0, 4))
@@ -123,13 +143,37 @@ def VdW_interaction(path, pdb_files=None):
             
             from function import distance
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
-            Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
-            VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_distance
-            from function import intersect_vol
-            Atom_volume = intersect_vol(Atom_distance, 6, 6)
             
-            VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_volume
-    return VdW_dictionary
+            if output == 'cluster':
+                from function import cluster_calc
+                VdW_cluster = {}
+                Atom_distance = np.nan_to_num(Atom_distance)
+                VdW_cluster = cluster_calc(Atom_distance)
+                return VdW_cluster
+            
+            elif output == 'volume':
+                from function import intersect_vol
+                VdW_volume = {}
+                Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
+                Atom_volume = intersect_vol(Atom_distance, 6, 6)
+                VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
+                return VdW_volume
+            else:
+                VdW_dictionary = {}
+                vol_cluster = []
+                Atom_distance = np.nan_to_num(Atom_distance)
+                vol_cluster.append(Atom_distance)
+                
+                VdW_volume = {}
+                Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
+                Atom_volume = intersect_vol(Atom_distance, 6, 6)
+                vol_cluster.append(Atom_volume)
+                VdW_dictionary[str(pdb_file).split('-')[1]] = vol_cluster
+                
+                
+                
+            
+  
 
 
 
