@@ -13,6 +13,9 @@ def rel_aa(Sequence:str, AA_property:str) -> list:
             count += 1
     return count
 
+
+
+#Calculates distance based on two arrays, with set cutoff as a maximum distance allowed
 def distance (array1, array2, cutoff, remove_nan=True):
     from scipy.spatial.distance import cdist
     import numpy as np
@@ -31,6 +34,15 @@ def distance (array1, array2, cutoff, remove_nan=True):
         return distance
     else:
         raise ValueError('remove_nan must be either True or False')
+    
+def intersect_vol(array:np.array, r1:str, r2:str):
+    import numpy as np
+    r1 = float(r1)
+    r2 = float(r2)
+    vol = array
+    d = array[1:,1:]
+    vol[1:,1:] = (np.pi*(r2+r1-d)**2 * (d**2 + 2*d*r1 - 3*r1**2 + 2*d*r2 + 6*r1*r2 - 3*r2**2))/(12*d)
+    return vol
 
 
 #https://www.bioinformation.net/003/002800032008.pdf
@@ -44,6 +56,7 @@ def salt_bridge(path, pdb_files=None):
     if isinstance(pdb_files, str):
         pdb_files = [pdb_files]
     Salt_bridges = dict()
+    
     for pdb_file in pdb_files:
         Asp_Glu_array = np.empty((0, 4))
         Lys_Arg_His_array = np.empty((0, 4))
@@ -64,16 +77,50 @@ def salt_bridge(path, pdb_files=None):
             from function import distance
             Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
     return Salt_bridges
-"""             #calculate distance clean up array
-            distance = cdist(Asp_Glu_array[:,1:], Lys_Arg_His_array[:,1:], metric='euclidean') #calculate distance
-            distance = np.concatenate((np.array([Lys_Arg_His_array[:,0]]), distance), axis=0) #add atom number from Lys_Arg_His to array
-            distance = np.concatenate((np.insert(np.array([Asp_Glu_array[:,0]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from Asp_Glu to array
-            distance[1:, 1:][distance[1:, 1:] > 4] = np.nan #set distance > 4 to nan
-            rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
-            cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
-            distance = distance[~rows_with_nan, :] #delete rows with all nan values
-            distance = distance[:, ~cols_with_nan] #delete columns with all nan values
-            Salt_bridges[str(pdb_file).split('-')[1]] = distance """
+
+def VdW_interaction(path, pdb_files=None):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    VdW_dictionary = dict()
+    
+    for pdb_file in pdb_files:
+        with open(os.path.join(path, str(pdb_file))) as f:
+            Atom_array = np.empty((0, 4))
+            #VdW_radii = {'C': 3.1, 'N': 2.95, 'O': 2.96} # Van der Waals radii in Angstrom enlarged by watermolecule radius 1.4 A (https://academic.oup.com/nar/article/49/W1/W559/6279848#267025710)
+            #C_C = 6.2
+            #C_N = 6.05
+            #C_O = 6.06
+            #N_N = 5.9
+            #N_O = 5.91
+            #O_O = 5.92
+            X_array = np.array([[]])
+            Atom_list = ['C', 'N', 'O']
+            for line in f:
+                line = line.strip()
+                if line.startswith('ATOM'):
+                    if ('LEU' in line and line[12:17].strip() in Atom_list) or ('VAL' in line and line[12:17].strip() in Atom_list) or ('ILE' in line and line[12:17].strip() in Atom_list):
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = line_array.astype('float64')
+                        Atom_array = np.append(Atom_array, line_array, axis = 0)
+                        if 'C' in line[12:17]:
+                            X_array = np.append(X_array, int('0'))
+                        elif 'N' in line[12:17]:
+                            X_array = np.append(X_array, int('1'))
+                        elif 'O' in line[12:17]:
+                            X_array = np.append(X_array, int('2'))
+            
+            from function import distance
+            Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
+            Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
+            VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_distance
+    return VdW_dictionary
 
 
 
