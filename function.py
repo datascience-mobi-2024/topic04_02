@@ -46,31 +46,31 @@ def intersect_vol(array, r1:str, r2:str):
     return vol
 
 def cluster_calc(array):
-  Cluster ={}
-  from scipy.sparse.csgraph import connected_components
-  from scipy.sparse import lil_matrix
-  adjacency_matrix = lil_matrix((int(len(array))), int(len(array)))
-  for i in range(len(array)):
-    adjacency_matrix[0,i] = array[0,i]
-    adjacency_matrix[i,0] = array[i,0]
-  for i in range(1, len(array)):
-    for j in range(i+1, len(array)):
-      overlap_volume = array[i, j]
-      adjacency_matrix[i, j] = overlap_volume
-  
-  adjacency_matrix = adjacency_matrix.tocsr()
-  labels, n_components = connected_components(adjacency_matrix, directed=False)
-  
-  set_components = set(n_components) #unique number of clusters
-  list_components = n_components.tolist()
-  
-  for i in range(len(set_components)):
-    atom_number = []
-    for n in range(len(list_components)):
-      if list_components[n] == i:
-        atom_number.append(adjacency_matrix[list_components[0],n+1])   
-        Cluster[f'Cluster {str(i)}'] = atom_number
-  return Cluster
+    Cluster ={}
+    from scipy.sparse.csgraph import connected_components
+    from scipy.sparse import lil_matrix
+    adjacency_matrix = lil_matrix((int(len(array)), int(len(array))))
+    for i in range(len(array)):
+        adjacency_matrix[0,i] = array[0,i]
+        adjacency_matrix[i,0] = array[i,0]
+    for i in range(1, len(array)):
+        for j in range(i+1, len(array)):
+            overlap_volume = array[i, j]
+            adjacency_matrix[i, j] = overlap_volume
+
+    adjacency_matrix = adjacency_matrix.tocsr()
+    labels, n_components = connected_components(adjacency_matrix[1:,1:])
+
+    set_components = set(n_components) #unique number of clusters
+    list_components = n_components.tolist()
+
+    for i in range(len(set_components)):
+        atom_number = []
+        for n in range(len(list_components)):
+            if list_components[n] == i:
+                atom_number.append(adjacency_matrix[list_components[0],n+1])   
+                Cluster[f'Cluster {str(i)}'] = atom_number
+    return Cluster
 
 
 #https://www.bioinformation.net/003/002800032008.pdf
