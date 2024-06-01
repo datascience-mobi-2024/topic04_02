@@ -120,6 +120,10 @@ def VdW_interaction(path, pdb_files=None):
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
             VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_distance
+            from function import intersect_vol
+            Atom_volume = intersect_vol(Atom_distance, 6, 6)
+            
+            VdW_dictionary[str(pdb_file).split('-')[1]] = Atom_volume
     return VdW_dictionary
 
 
