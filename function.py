@@ -146,33 +146,21 @@ def VdW_interaction(path, pdb_files=None, output = None):
             from function import distance
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             
-            if output == 'cluster':
-                from function import cluster_calc
-                VdW_cluster = {}
-                Atom_distance = np.nan_to_num(Atom_distance)
-                VdW_cluster = cluster_calc(Atom_distance)
-                return VdW_cluster
+            from function import cluster_calc
+            VdW_cluster = {}
+            Atom_distance = np.nan_to_num(Atom_distance)
+            VdW_cluster = cluster_calc(Atom_distance)
             
-            elif output == 'volume':
-                from function import intersect_vol
-                VdW_volume = {}
-                Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
-                Atom_volume = intersect_vol(Atom_distance, 6, 6)
-                VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
-                return VdW_volume
-            else:
-                VdW_dictionary = {}
-                vol_cluster = []
-                Atom_distance = np.nan_to_num(Atom_distance)
-                vol_cluster.append(Atom_distance)
-                
-                VdW_volume = {}
-                Atom_distance = np.where(Atom_distance==0, np.nan, Atom_distance)
-                Atom_volume = intersect_vol(Atom_distance, 6, 6)
-                vol_cluster.append(Atom_volume)
-                VdW_dictionary[str(pdb_file).split('-')[1]] = vol_cluster
+            from function import intersect_vol
+            VdW_volume = {}
+            Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
+            Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
+            VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
+            
+            return VdW_cluster, VdW_volume
                 
                 
+             
                 
             
   
