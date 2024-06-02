@@ -223,3 +223,5 @@ def pain(data, by, upper, lower):
         lower_threshold = data.quantile(lower)
         upper_threshold = data.quantile(upper)
         return data[(data <= lower_threshold) | (data >= upper_threshold)].reset_index(drop=True)
+    else:
+        raise ValueError('Maxi ist ein Idiot')
