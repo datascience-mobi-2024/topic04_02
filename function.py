@@ -210,12 +210,13 @@ def p_val(corr, n, alpha):
         p = 1 - stats.t.cdf(t, n-2)
         return [p, p < alpha]
 
-def pain(data, by, upper, lower):
-    """"
+def pain(data, by= None, lower = 0.1, upper = 0.9):
+    """
     data: pandas DataFrame or Series, if series then no argument by \n
     by: column to filter by (string) (only applicable if data is a DataFrame) \n
     upper and lower: threshold percentages, for example lower = 0.1, upper = 0.9"""
-    if isinstance(data, pd.Series):
+    import pandas as pd
+    if isinstance(data, pd.DataFrame):
         lower_threshold = data[by].quantile(lower)
         upper_threshold = data[by].quantile(upper)
         return data[(data[by] <= lower_threshold) | (data[by] >= upper_threshold)].reset_index(drop=True)
