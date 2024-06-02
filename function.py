@@ -90,7 +90,7 @@ def VdW_interaction(path, pdb_files=None, output = None):
             from helper_function import cluster_calc
             VdW_cluster = {}
             Atom_distance = np.nan_to_num(Atom_distance)
-            VdW_cluster = cluster_calc(Atom_distance)
+            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
             
             from helper_function import intersect_vol
             VdW_volume = {}
