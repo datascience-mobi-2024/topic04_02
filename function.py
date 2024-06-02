@@ -1,12 +1,12 @@
 #function that calculates the relative amino acid composition based on sequence entry and definded amino acid property
-def rel_aa_comp(Sequence:str, AA_property:str) -> list: 
+def rel_aa_comp(Sequence:str, AA_property:str) -> str: 
     count = 0
     for element in Sequence:  
         if element in AA_property:
             count += 1
     return count/len(Sequence)
 
-def rel_aa(Sequence:str, AA_property:str) -> list: 
+def rel_aa(Sequence:str, AA_property:str) -> str: 
     count = 0
     for element in Sequence:  
         if element in AA_property:
@@ -90,7 +90,7 @@ def VdW_interaction(path, pdb_files=None, output = None):
             from helper_function import cluster_calc
             VdW_cluster = {}
             Atom_distance = np.nan_to_num(Atom_distance)
-            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
+            VdW_cluster = cluster_calc(Atom_distance)
             
             from helper_function import intersect_vol
             VdW_volume = {}
@@ -133,19 +133,19 @@ def univt2(seq:str, size:float):
     counth=0
     counts=0
     countt=0
-    for p in range(1,len(helic)-2):
+    for p in range(1,len(helic)-n):
         if helic[p+2]==helic[p]+2 and helic[p-1]!=helic[p]-1:
             counth+=1
     if len(helic) > 2:
         if helic[2] == helic[0]+2:
             counth+=1
-    for n in range(1,len(sheet)-2):
+    for n in range(1,len(sheet)-n):
         if sheet[n+2]==sheet[n]+2 and sheet[n-1]!=sheet[n]-1:
             counts+=1
     if len(sheet) >= 2:
         if sheet[2] == sheet[0]+2:
             counts+=1
-    for s in range(1,len(turn)-2):
+    for s in range(1,len(turn)-n):
         if turn[s+2]==turn[s]+2 and turn[s-1]!=turn[s]-1:
             countt+=1
     if len(turn) > 2:
@@ -201,3 +201,10 @@ def univt3(seq:str):
     print(f'Sheets:{counts}')
     print(f'Turns:{countt} (Nicht getestet)')'''
         
+def p_val(corr, n, alpha):
+    import math
+    import scipy.stats as stats
+    if math.sqrt((1-(corr**2))/(n-2)) != 0 and n-2 != 0:
+        t = (corr)/(math.sqrt((1-(corr**2))/(n-2)))
+        p = 1 - stats.t.cdf(t, n-2)
+        return [p, p < alpha]
