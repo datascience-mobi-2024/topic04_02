@@ -48,7 +48,7 @@ def salt_bridge(path, pdb_files=None):
             Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
     return Salt_bridges
 
-def VdW_interaction(path, pdb_files=None, output = None):
+def VdW_interaction(path, pdb_files=None):
     import numpy as np
     import os
     import scipy
@@ -58,6 +58,9 @@ def VdW_interaction(path, pdb_files=None, output = None):
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
         pdb_files = [pdb_files]
+    VdW_cluster = {}
+    VdW_volume = {}
+
     for pdb_file in pdb_files:
         with open(os.path.join(path, str(pdb_file))) as f:
             Atom_array = np.empty((0, 4))
@@ -88,12 +91,10 @@ def VdW_interaction(path, pdb_files=None, output = None):
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             
             from helper_function import cluster_calc
-            VdW_cluster = {}
             Atom_distance = np.nan_to_num(Atom_distance)
             VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
             
             from helper_function import intersect_vol
-            VdW_volume = {}
             Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
             Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
             VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
