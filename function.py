@@ -124,7 +124,7 @@ def H_bond(path, pqr_files=None):
     Acceptor_list = [('GLN', 'OE1'), ('ASP', 'OD1'), ('ASP', 'OD2'), ('ASN', 'OD1')]
     
     if pqr_files is None:
-        pqr_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+        pqr_files = [f for f in os.listdir(path) if f.endswith('.pqr')]
     if isinstance(pqr_files, str):
         pqr_files = [pqr_files]
     for pqr_file in pqr_files:
