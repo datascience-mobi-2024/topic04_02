@@ -136,6 +136,7 @@ def H_bond(path, pqr_files=None):
             aa_cache = []
             atom_cache = []
             for line in f:
+                line = line.replace('-', '  -')
                 if line.startswith('ATOM'):
                     if not aa_cache:
                         aa_cache.append(line.split()[3])
@@ -144,7 +145,6 @@ def H_bond(path, pqr_files=None):
                     elif aa_cache[1] == line.split()[4]:
                         atom_cache.append(line)
                     elif aa_cache[1] != line.split()[4]:
-                        line = line.replace('-', '    -')
                         for n in range(len(Donor_list)):
                             if aa_cache[0] == Donor_list[n][0]:
                                 for i in range(len(atom_cache)):
