@@ -14,7 +14,7 @@ def rel_aa(Sequence:str, AA_property:str) -> str:
     return count
 
 ########################### Used for 3D structure analysis ###########################
-def pdb2pqr(input_path,pdb_files, output_path):
+def pdb2pqr(input_path, output_path,pdb_files=None):
 #INFO:Please cite:  Jurrus E, et al.  Improvements to the APBS biomolecular solvation software suite.  Protein Sci 27 112-128 (2018).
 #INFO:Please cite:  Dolinsky TJ, et al.  PDB2PQR: expanding and upgrading automated preparation of biomolecular structures for molecular simulations. Nucleic Acids Res 35 W522-W525 (2007).
     import os
