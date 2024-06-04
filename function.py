@@ -14,6 +14,17 @@ def rel_aa(Sequence:str, AA_property:str) -> str:
     return count
 
 ########################### Used for 3D structure analysis ###########################
+def pdb2pqr(input_path,pdb_files, output_path):
+#INFO:Please cite:  Jurrus E, et al.  Improvements to the APBS biomolecular solvation software suite.  Protein Sci 27 112-128 (2018).
+#INFO:Please cite:  Dolinsky TJ, et al.  PDB2PQR: expanding and upgrading automated preparation of biomolecular structures for molecular simulations. Nucleic Acids Res 35 W522-W525 (2007).
+    import os
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(input_path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    for pdb_file in pdb_files:
+        name = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+        os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
 
 #https://www.bioinformation.net/003/002800032008.pdf
 def salt_bridge(path, pdb_files=None):
