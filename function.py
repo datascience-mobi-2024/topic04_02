@@ -188,7 +188,7 @@ def H_bond(path, pqr_files=None):
             from helper_function import distance
             from helper_function import angle_calc
             angle = angle_calc(Donor_array, H_array, Acceptor_array)
-            HB_dic[str(pqr_file).split('.')[1]] = angle
+            HB_dic[str(pqr_file).split('.')[0]] = angle
     return HB_dic
                                             
 
