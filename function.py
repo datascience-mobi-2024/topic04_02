@@ -135,7 +135,6 @@ def H_bond(path, pqr_files=None):
             Acceptor_array = np.empty((0, 4))
             aa_cache = []
             atom_cache = []
-            test_count = 0
             for line in f:
                 if line.startswith('ATOM'):
                     if not aa_cache:
@@ -145,7 +144,7 @@ def H_bond(path, pqr_files=None):
                     elif aa_cache[1] == line.split()[4]:
                         atom_cache.append(line)
                     elif aa_cache[1] != line.split()[4]:
-                        test_count += 1             
+                        line = line.replace('-', '    -')
                         for n in range(len(Donor_list)):
                             if aa_cache[0] == Donor_list[n][0]:
                                 for i in range(len(atom_cache)):
@@ -185,31 +184,16 @@ def H_bond(path, pqr_files=None):
                                         if ('GLU' == aa_cache[0]) and 'OE2' in atom_cache[i].split()[2]:
                                             if any('HE2' not in string for string in atom_cache):
                                                 line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
-                                                try:
-                                                    line_array = line_array.astype('float64')
-                                                except Exception as e:
-                                                    atom_cache[i].replace('-', '    -')
-                                                    line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
-                                                    line_array = line_array.astype('float64')
+                                                line_array = line_array.astype('float64')
                                                 Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
                                         elif ('ASP' == aa_cache[0]) and 'OD' in atom_cache[i].split()[2]:
                                             if any('HD' not in string for string in atom_cache):
                                                 line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
-                                                try:
-                                                    line_array = line_array.astype('float64')
-                                                except Exception as e:
-                                                    atom_cache[i].replace('-', '    -')
-                                                    line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
-                                                    line_array = line_array.astype('float64')
+                                                line_array = line_array.astype('float64')
                                                 Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
                                         else: 
                                             line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
-                                            try:
-                                                line_array = line_array.astype('float64')
-                                            except Exception as e:
-                                                atom_cache[i].replace('-', '    -')
-                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
-                                                line_array = line_array.astype('float64')
+                                            line_array = line_array.astype('float64')
                                             Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
                         aa_cache = []
                         atom_cache = [] 
