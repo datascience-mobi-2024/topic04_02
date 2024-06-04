@@ -188,10 +188,9 @@ def H_bond(path, pqr_files=None):
                                                 try:
                                                     line_array = line_array.astype('float64')
                                                 except Exception as e:
-                                                    line_array = np.array([[atom_cache[i].split()[1].split('-')[0], atom_cache[i].split()[5].split('-')[0], atom_cache[i].split()[6].split('-')[0], atom_cache[i].split()[7].split('-')[0]]])
+                                                    atom_cache[i].replace('-', '    -')
+                                                    line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
                                                     line_array = line_array.astype('float64')
-                                                    Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
-
                                                 Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
                                         elif ('ASP' == aa_cache[0]) and 'OD' in atom_cache[i].split()[2]:
                                             if any('HD' not in string for string in atom_cache):
@@ -199,17 +198,18 @@ def H_bond(path, pqr_files=None):
                                                 try:
                                                     line_array = line_array.astype('float64')
                                                 except Exception as e:
-                                                    line_array = np.array([[atom_cache[i].split()[1].split('-')[0], atom_cache[i].split()[5].split('-')[0], atom_cache[i].split()[6].split('-')[0], atom_cache[i].split()[7].split('-')[0]]])
+                                                    atom_cache[i].replace('-', '    -')
+                                                    line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
                                                     line_array = line_array.astype('float64')
-                                                    Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
+                                                Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
                                         else: 
                                             line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
                                             try:
                                                 line_array = line_array.astype('float64')
                                             except Exception as e:
-                                                line_array = np.array([[atom_cache[i].split()[1].split('-')[0], atom_cache[i].split()[5].split('-')[0], atom_cache[i].split()[6].split('-')[0], atom_cache[i].split()[7].split('-')[0]]])
+                                                atom_cache[i].replace('-', '    -')
+                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
                                                 line_array = line_array.astype('float64')
-                                            line_array = np.array([[0, 0, 0, 0]])
                                             Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
                         aa_cache = []
                         atom_cache = [] 
