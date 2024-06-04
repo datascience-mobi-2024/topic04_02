@@ -62,14 +62,15 @@ def distance (array1, array2, cutoff = None, remove_nan=True):
         raise ValueError('remove_nan must be either True or False')
     
     
-def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub
+def angle_calc(Donor_array, H_array, Acceptor_array, cutoff): #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub
     from helper_function import distance
     import numpy as np
+    cutoff01 = cutoff
     d_DH = np.full((0,2,2), fill_value = np.nan)
     for n in range(len(Donor_array)):
         DH_temp = distance(np.array([Donor_array[n,:]]), np.array([H_array[n,:]]))
         d_DH = np.concatenate((d_DH, DH_temp.reshape((1,) + DH_temp.shape)), axis=0)
-    d_HA = distance(Donor_array, Acceptor_array, remove_nan=False, cutoff = 3.5)
+    d_HA = distance(Donor_array, Acceptor_array,cutoff01,remove_nan=False)
     
     d_DA = distance(Donor_array, Acceptor_array, remove_nan=False)
     angle = np.full((d_DA.shape[0], d_DA.shape[1]), fill_value = np.nan)

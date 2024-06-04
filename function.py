@@ -112,7 +112,7 @@ def VdW_interaction(path, pdb_files=None, output = None):
     return VdW_cluster, VdW_volume
                 
                 
-def H_bond(path, pqr_files=None):
+def H_bond(path, cutoff, pqr_files=None):
     import numpy as np
     import os
     import scipy
@@ -122,14 +122,13 @@ def H_bond(path, pqr_files=None):
                     ('ARG', 'NH1', 'HH11'), ('ARG', 'NH1', 'HH12'), ('ARG', 'NH2', 'HH21'), ('ARG', 'NH2', 'HH22'), ('SER', 'OG', 'HG'), ('THR', 'OG1', 'HG1'), 
                     ('TRP', 'NE1', 'HE1'), ('TYR', 'OH', 'HH')]
     Acceptor_list = [('GLN', 'OE1'), ('ASP', 'OD1'), ('ASP', 'OD2'), ('ASN', 'OD1')]
-    
+    HB_dic = {}
     if pqr_files is None:
         pqr_files = [f for f in os.listdir(path) if f.endswith('.pqr')]
     if isinstance(pqr_files, str):
         pqr_files = [pqr_files]
     for pqr_file in pqr_files:
         with open(os.path.join(path, str(pqr_file))) as f:
-            HB_dic = {}
             Donor_array = np.empty((0, 4))
             H_array = np.empty((0, 4))
             Acceptor_array = np.empty((0, 4))
@@ -195,13 +194,14 @@ def H_bond(path, pqr_files=None):
                                             line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
                                             line_array = line_array.astype('float64')
                                             Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
-                        aa_cache = []
-                        atom_cache = [] 
-        print(str(pqr_file).split('.')[0])
-        from helper_function import distance
-        from helper_function import angle_calc
-        angle = angle_calc(Donor_array, H_array, Acceptor_array)
-        HB_dic[str(pqr_file).split('.')[0]] = angle
+                            aa_cache = []
+                            atom_cache = [] 
+            print(str(pqr_file).split('.')[0])
+            from helper_function import distance
+            from helper_function import angle_calc
+            cutoff01 = cutoff
+            angle = angle_calc(Donor_array, H_array, Acceptor_array, cutoff01)
+            HB_dic[str(pqr_file).split('.')[0]] = angle
     return HB_dic
                                             
 
