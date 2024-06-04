@@ -117,7 +117,7 @@ def H_bond(path, pqr_files=None):
     if isinstance(pqr_files, str):
         pqr_files = [pqr_files]
     for pqr_file in pqr_files:
-        with open(os.path.join(path, 'C0H3Z2.pqr')) as f:
+        with open(os.path.join(path, str(pqr_file))) as f:
             HB_dic = {}
             Donor_array = np.empty((0, 4))
             H_array = np.empty((0, 4))
@@ -184,7 +184,9 @@ def H_bond(path, pqr_files=None):
                                         else: 
                                             line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
                                             line_array = line_array.astype('float64')
-                                            Acceptor_array = np.append(Acceptor_array, line_array, axis=0) 
+                                            Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
+                        aa_cache = []
+                        atom_cache = [] 
             from helper_function import distance
             from helper_function import angle_calc
             angle = angle_calc(Donor_array, H_array, Acceptor_array)
