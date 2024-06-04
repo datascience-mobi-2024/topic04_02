@@ -198,6 +198,7 @@ def H_bond(path, pqr_files=None):
                                             Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
                         aa_cache = []
                         atom_cache = [] 
+            print(str(pqr_file).split('.')[0])
             from helper_function import distance
             from helper_function import angle_calc
             angle = angle_calc(Donor_array, H_array, Acceptor_array)
