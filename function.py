@@ -112,7 +112,7 @@ def VdW_interaction(path, pdb_files=None, output = None):
     return VdW_cluster, VdW_volume
                 
                 
-def H_bond(path, cutoff, pqr_files=None):
+def H_bond(path, pqr_files=None):
     import numpy as np
     import os
     import scipy
