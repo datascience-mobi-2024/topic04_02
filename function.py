@@ -199,7 +199,6 @@ def H_bond(path, pqr_files=None):
             print(str(pqr_file).split('.')[0])
             from helper_function import distance
             from helper_function import angle_calc
-            cutoff01 = cutoff
             angle = angle_calc(Donor_array, H_array, Acceptor_array, cutoff01)
             HB_dic[str(pqr_file).split('.')[0]] = angle
     return HB_dic
