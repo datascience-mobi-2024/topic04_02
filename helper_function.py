@@ -66,7 +66,7 @@ def angle_calc(Donor_array, H_array, Acceptor_array, cutoff): #https://www.scien
     from helper_function import distance
     import numpy as np
     cutoff01 = cutoff
-    d_DH = np.full((0,0,2), fill_value = np.nan)
+    d_DH = np.full((0,2,2), fill_value = np.nan)
     for n in range(len(Donor_array)):
         DH_temp = distance(np.array([Donor_array[n,:]]), np.array([H_array[n,:]]))
         d_DH = np.concatenate((d_DH, DH_temp.reshape((1,) + DH_temp.shape)), axis=0)
