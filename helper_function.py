@@ -39,13 +39,15 @@ def intersect_vol(array, r1:str, r2:str):
     return vol
 
 #Calculates distance based on two arrays, with set cutoff as a maximum distance allowed
-def distance (array1, array2, cutoff, remove_nan=True):
+def distance (array1, array2, cutoff = None, remove_nan=True):
     from scipy.spatial.distance import cdist
     import numpy as np
     distance = cdist(array1[:,1:], array2[:,1:], metric='euclidean') #calculate distance
-    distance = np.concatenate((np.array([array2[:,0]]), distance), axis=0) #add atom number from  array2
-    distance = np.concatenate((np.insert(np.array([array1[:,0]]), 0, None).reshape(-1,1), distance), axis=1) #add atom number from array1
-    distance[1:, 1:][distance[1:, 1:] > cutoff] = np.nan #set distance > cutoff to nan
+    distance = np.concatenate((np.array([array1[:,0]]).T, distance), axis=1) #add atom number from  array1
+    distance = np.concatenate(((np.insert(np.array([array2[:,0]]), 0, None).reshape(-1,1)).T, distance), axis=0) #add atom number from array1
+    if cutoff is not None:
+        distance[1:, 1:][distance[1:, 1:] >= cutoff] = np.nan #set distance > cutoff to nan
+        
     if remove_nan == False:
         return distance
     elif remove_nan == True:
@@ -54,6 +56,29 @@ def distance (array1, array2, cutoff, remove_nan=True):
         cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
         distance = distance[~rows_with_nan, :] #delete rows with all nan values
         distance = distance[:, ~cols_with_nan] #delete columns with all nan values
+        distance[:,0] = distance[:,0].astype('int')
         return distance
     else:
         raise ValueError('remove_nan must be either True or False')
+    
+    
+def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub
+    from helper_function import distance
+    import numpy as np
+    d_DH = np.full((0,2,2), fill_value = np.nan)
+    for n in range(len(Donor_array)):
+        DH_temp = distance(np.array([Donor_array[n,:]]), np.array([H_array[n,:]]))
+        d_DH = np.concatenate((d_DH, DH_temp.reshape((1,) + DH_temp.shape)), axis=0)
+    d_HA = distance(H_array, Acceptor_array, cutoff = 3.5,remove_nan=False)
+    d_DA = distance(Donor_array, Acceptor_array, remove_nan=False)
+    angle = np.full((d_DA.shape[0], d_DA.shape[1]), fill_value = np.nan)
+    angle[0,:] = d_DA[0,:].T
+    for n in range(d_DH.shape[0]):
+            theta = np.arccos((d_DH[n,1,1]**2 + d_HA[n,1:]**2 - d_DA[1:,1:][n,:]**2)/(2*d_DH[n,1,1]*d_HA[1:,1:][n,:]))
+            theta[(theta < 100* np.pi/180) | (theta > np.pi)] = np.nan
+            angle[n,0] = d_DA[n,0]
+            angle[1:,1:][n,:] = theta 
+    H_id = np.full((angle.shape[0], angle.shape[1]), fill_value = np.nan)
+    H_id[1:,0] = d_DH[:,1,0]
+    angle = np.dstack((angle, H_id))
+    return angle
