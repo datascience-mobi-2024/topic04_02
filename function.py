@@ -14,6 +14,21 @@ def rel_aa(Sequence:str, AA_property:str) -> str:
     return count
 
 ########################### Used for 3D structure analysis ###########################
+def SASA_calc(path, pdb_files=None):
+    from Bio.PDB import PDBParser
+    from Bio.PDB.SASA import ShrakeRupley
+    import os
+    SASA_dict = {}
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    for pdb_file in pdb_files:
+        struct = PDBParser(QUIET=1).get_structure(pdb_file.split('-')[1], os.path.join(path, str(pdb_file)))
+        ShrakeRupley().compute(struct, level = 'S')
+        SASA_dict[pdb_file.split('-')[1]] = struct.sasa
+    return SASA_dict
+
 def pdb2pqr(input_path, output_path,pdb_files=None):
 #INFO:Please cite:  Jurrus E, et al.  Improvements to the APBS biomolecular solvation software suite.  Protein Sci 27 112-128 (2018).
 #INFO:Please cite:  Dolinsky TJ, et al.  PDB2PQR: expanding and upgrading automated preparation of biomolecular structures for molecular simulations. Nucleic Acids Res 35 W522-W525 (2007).
