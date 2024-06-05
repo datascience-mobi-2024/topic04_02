@@ -79,7 +79,7 @@ def angle_calc(Donor_array, H_array, Acceptor_array, cutoff): #https://www.scien
             theta[(theta < 100* np.pi/180) | (theta > np.pi)] = np.nan
             angle[n,0] = d_DA[n,0]
             angle[1:,1:][n,:] = theta 
-    #H_id = np.full((angle.shape[0], angle.shape[1]), fill_value = np.nan)
-    #H_id[1:,0] = d_DH[:,1,0]
-    #angle = np.dstack((angle, H_id))
+    H_id = np.full((angle.shape[0], angle.shape[1]), fill_value = np.nan)
+    H_id[1:,0] = d_DH[:,1,0]
+    angle = np.dstack((angle, H_id))
     return angle
