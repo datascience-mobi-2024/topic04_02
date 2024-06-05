@@ -14,6 +14,17 @@ def rel_aa(Sequence:str, AA_property:str) -> str:
     return count
 
 ########################### Used for 3D structure analysis ###########################
+def pdb2pqr(input_path, output_path,pdb_files=None):
+#INFO:Please cite:  Jurrus E, et al.  Improvements to the APBS biomolecular solvation software suite.  Protein Sci 27 112-128 (2018).
+#INFO:Please cite:  Dolinsky TJ, et al.  PDB2PQR: expanding and upgrading automated preparation of biomolecular structures for molecular simulations. Nucleic Acids Res 35 W522-W525 (2007).
+    import os
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(input_path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    for pdb_file in pdb_files:
+        name = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+        os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
 
 #https://www.bioinformation.net/003/002800032008.pdf
 def salt_bridge(path, pdb_files=None):
@@ -102,6 +113,98 @@ def VdW_interaction(path, pdb_files=None):
     return VdW_cluster, VdW_volume
                 
                 
+def H_bond(path, pqr_files=None):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    Donor_list = [('GLN', 'NE2', 'HE21'), ('GLN', 'NE2', 'HE22'), ('GLU', 'OE2', 'HE2'), ('ASP', 'OD2', 'HD2'), ('ASN', 'ND2', 'HD21'), ('ASN', 'ND2', 'HD22'),
+                    ('HIS', 'NE2', 'HE2'), ('HIS', 'ND1', 'HD2'), ('LYS', 'NZ', 'HZ1'), ('LYS', 'NZ', 'HZ2'), ('LYS', 'NZ', 'HZ3'), ('ARG', 'NE', 'HE'), 
+                    ('ARG', 'NH1', 'HH11'), ('ARG', 'NH1', 'HH12'), ('ARG', 'NH2', 'HH21'), ('ARG', 'NH2', 'HH22'), ('SER', 'OG', 'HG'), ('THR', 'OG1', 'HG1'), 
+                    ('TRP', 'NE1', 'HE1'), ('TYR', 'OH', 'HH')]
+    Acceptor_list = [('GLN', 'OE1'), ('ASP', 'OD1'), ('ASP', 'OD2'), ('ASN', 'OD1')]
+    HB_dic = {}
+    if pqr_files is None:
+        pqr_files = [f for f in os.listdir(path) if f.endswith('.pqr')]
+    if isinstance(pqr_files, str):
+        pqr_files = [pqr_files]
+    for pqr_file in pqr_files:
+        with open(os.path.join(path, str(pqr_file))) as f:
+            Donor_array = np.empty((0, 4))
+            H_array = np.empty((0, 4))
+            Acceptor_array = np.empty((0, 4))
+            aa_cache = []
+            atom_cache = []
+            for line in f:
+                line = line.replace('-', '  -')
+                if line.startswith('ATOM'):
+                    if not aa_cache:
+                        aa_cache.append(line.split()[3])
+                        aa_cache.append(line.split()[4])
+                        atom_cache.append(line)
+                    elif aa_cache[1] == line.split()[4]:
+                        atom_cache.append(line)
+                    elif aa_cache[1] != line.split()[4]:
+                        for n in range(len(Donor_list)):
+                            if aa_cache[0] == Donor_list[n][0]:
+                                for i in range(len(atom_cache)):
+                                    if Donor_list[n][1] == atom_cache[i].split()[2]:
+                                        if ('GLU' == aa_cache[0]) and 'OE2' in atom_cache[i].split()[2]:
+                                            if any('HE2' in string for string in atom_cache):
+                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                                line_array = line_array.astype('float64')
+                                                Donor_array = np.append(Donor_array, line_array, axis=0) 
+                                        elif ('ASP' == aa_cache[0]) and 'OD2' in atom_cache[i].split()[2]:
+                                            if any('HD2' in string for string in atom_cache):
+                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                                line_array = line_array.astype('float64')
+                                                Donor_array = np.append(Donor_array, line_array, axis=0)                                             
+                                        elif ('HIS' == aa_cache[0]) and 'ND1' in atom_cache[i].split()[2]:
+                                            if any ('HD1' in string for string in atom_cache):
+                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                                line_array = line_array.astype('float64')
+                                                Donor_array = np.append(Donor_array, line_array, axis=0)
+                                        elif ('HIS' == aa_cache[0]) and 'NE2' in atom_cache[i].split()[2]:
+                                            if any('HE2' in string for string in atom_cache):
+                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                                line_array = line_array.astype('float64')
+                                                Donor_array = np.append(Donor_array, line_array, axis=0)
+                                        else: 
+                                            line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                            line_array = line_array.astype('float64')
+                                            Donor_array = np.append(Donor_array, line_array, axis=0)         
+                                    elif Donor_list[n][2] == atom_cache[i].split()[2]:
+                                        line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                        line_array = line_array.astype('float64')
+                                        H_array = np.append(H_array, line_array, axis=0)
+                        for n in range(len(Acceptor_list)):
+                            if aa_cache[0] == Acceptor_list[n][0]:
+                                for i in range(len(atom_cache)):
+                                    if Acceptor_list[n][1] == atom_cache[i].split()[2]:
+                                        if ('GLU' == aa_cache[0]) and 'OE2' in atom_cache[i].split()[2]:
+                                            if any('HE2' not in string for string in atom_cache):
+                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                                line_array = line_array.astype('float64')
+                                                Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
+                                        elif ('ASP' == aa_cache[0]) and 'OD' in atom_cache[i].split()[2]:
+                                            if any('HD' not in string for string in atom_cache):
+                                                line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                                line_array = line_array.astype('float64')
+                                                Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
+                                        else: 
+                                            line_array = np.array([[atom_cache[i].split()[1], atom_cache[i].split()[5], atom_cache[i].split()[6], atom_cache[i].split()[7]]])
+                                            line_array = line_array.astype('float64')
+                                            Acceptor_array = np.append(Acceptor_array, line_array, axis=0)
+                        aa_cache = []
+                        atom_cache = [] 
+            print(str(pqr_file).split('.')[0])
+            from helper_function import distance
+            from helper_function import angle_calc
+            angle = angle_calc(Donor_array, H_array, Acceptor_array)
+            HB_dic[str(pqr_file).split('.')[0]] = angle
+    return HB_dic
+                                            
+
              
                 
             

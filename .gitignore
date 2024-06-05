@@ -10,6 +10,7 @@
 /.ss2
 /Diffbond_v2
 /.vscode
+/venv_test
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,jupyternotebooks,windows,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python,jupyternotebooks,windows,macos
 
