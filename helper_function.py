@@ -51,7 +51,6 @@ def distance (array1, array2, cutoff = None, remove_nan=True):
     if remove_nan == False:
         return distance
     elif remove_nan == True:
-        rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None)
         rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
         cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
         distance = distance[~rows_with_nan, :] #delete rows with all nan values
