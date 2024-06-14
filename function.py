@@ -91,6 +91,7 @@ def VdW_interaction(path, pdb_files=None):
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
         pdb_files = [pdb_files]
+        input = 'str'
     VdW_cluster = {}
     VdW_volume = {}
 
@@ -132,7 +133,7 @@ def VdW_interaction(path, pdb_files=None):
                 
             VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
                
-    if isinstance(pdb_files, list) and len(pdb_files) <= 1:
+    if (input == 'str'):
         return cluster_calc(Atom_distance), Atom_volume                   
     return VdW_cluster, VdW_volume
                 
@@ -168,6 +169,7 @@ def H_bond_calc(path, pqr_files=None, remove_nan=False):
         pqr_files = [f for f in os.listdir(path) if f.endswith('.pqr')]
     if isinstance(pqr_files, str):
         pqr_files = [pqr_files]
+        input = 'str'
     for pqr_file in pqr_files:
         with open(os.path.join(path, str(pqr_file))) as f:
             Donor_array = np.empty((0, 4))
@@ -219,9 +221,9 @@ def H_bond_calc(path, pqr_files=None, remove_nan=False):
             HB_dict[str(pqr_file).split('.')[0]] = angle
 
 
-    if isinstance(pqr_files, str) and (remove_nan == True):
+    if (input == 'str') (remove_nan == True):
         return angle
-    elif isinstance(pqr_files, str) and (remove_nan == False):
+    elif (input == 'str') and (remove_nan == False):
         return angle2D
     else:
         return HB_dict
