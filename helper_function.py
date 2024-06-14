@@ -94,3 +94,4 @@ def remove_nan(array):
     array = array[~rows_with_nan, :] #delete rows with all nan values
     array = array[:, ~cols_with_nan] #delete columns with all nan values
     array[:,0] = array[:,0].astype('int')
+    return array
