@@ -81,7 +81,7 @@ def salt_bridge(path, pdb_files=None, remove_nan=None):
 
 
 
-def VdW_interaction(path, pdb_files=None, remove_nan=None):
+def VdW_interaction(path, pdb_files=None):
     import numpy as np
     import os
     import scipy
@@ -212,14 +212,14 @@ def H_bond_calc(path, pqr_files=None, remove_nan=None):
         from helper_function import remove_nan
         angle2D = angle[:,:,0]
         angle2D = remove_nan(angle2D)
-        if remove_nan is None:
-             HB_dict[str(pqr_file).split('.')[0]] = angle
-
-        else:
+        if remove_nan is True:
             angle2D = remove_nan(angle2D)
             HB_dict[str(pqr_file).split('.')[0]] = angle2D
+        else:
+            HB_dict[str(pqr_file).split('.')[0]] = angle
 
-    if isinstance(pqr_files, str) and (remove_nan is None):
+
+    if isinstance(pqr_files, str) and (remove_nan is True):
         return angle
     elif isinstance(pqr_files, str):
         return angle2D
