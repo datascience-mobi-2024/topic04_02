@@ -74,7 +74,8 @@ def salt_bridge(path, pdb_files=None, remove_nan=None):
             Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4, remove_nan = remove_nan)
     if isinstance(pdb_files, str):
         return distance(Asp_Glu_array, Lys_Arg_His_array, 4, remove_nan = remove_nan)
-    return Salt_bridges
+    else:
+        return Salt_bridges
 
 
 
