@@ -221,7 +221,7 @@ def H_bond_calc(path, pqr_files=None, remove_nan=True):
             HB_dict[str(pqr_file).split('.')[0]] = angle
 
 
-    if (input == 1) (remove_nan == True):
+    if (input == 1) and (remove_nan == True):
         return angle
     elif (input == 1) and (remove_nan == False):
         return angle2D
