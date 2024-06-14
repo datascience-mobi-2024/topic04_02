@@ -212,16 +212,17 @@ def H_bond_calc(path, pqr_files=None, remove_nan=None):
         from helper_function import remove_nan
         angle2D = angle[:,:,0]
         angle2D = remove_nan(angle2D)
-        if remove_nan not None:
+        if remove_nan is None:
+             HB_dict[str(pqr_file).split('.')[0]] = angle
+
+        else:
             angle2D = remove_nan(angle2D)
             HB_dict[str(pqr_file).split('.')[0]] = angle2D
-        else:
-            HB_dict[str(pqr_file).split('.')[0]] = angle
 
-    if isinstance(pqr_files, str) and (remove_nan not None):
-        return angle2D
-    elif: isinstance(pqr_files, str) and (remove_nan == None):
+    if isinstance(pqr_files, str) and (remove_nan is None):
         return angle
+    elif isinstance(pqr_files, str):
+        return angle2D
     else:
         return HB_dict
                                             
