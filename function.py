@@ -42,7 +42,7 @@ def pdb2pqr(input_path, output_path,pdb_files=None):
         os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
 
 #https://www.bioinformation.net/003/002800032008.pdf
-def salt_bridge(path, pdb_files=None, remove_nan=None):
+def salt_bridge(path, pdb_files=None, remove_nan=True):
     import numpy as np
     import os
     import scipy
@@ -133,12 +133,12 @@ def VdW_interaction(path, pdb_files=None):
                 
             VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
                
-    if (input == 'str'):
+    if (input := 'str' ):
         return cluster_calc(Atom_distance), Atom_volume                   
     return VdW_cluster, VdW_volume
                 
                 
-def H_bond_calc(path, pqr_files=None, remove_nan=False):
+def H_bond_calc(path, pqr_files=None, remove_nan=True):
     import numpy as np
     import os
     import scipy
@@ -221,9 +221,9 @@ def H_bond_calc(path, pqr_files=None, remove_nan=False):
             HB_dict[str(pqr_file).split('.')[0]] = angle
 
 
-    if (input == 'str') (remove_nan == True):
+    if (input := 'str') (remove_nan == True):
         return angle
-    elif (input == 'str') and (remove_nan == False):
+    elif (input := 'str') and (remove_nan == False):
         return angle2D
     else:
         return HB_dict
