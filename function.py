@@ -132,7 +132,7 @@ def VdW_interaction(path, pdb_files=None):
                 
             VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
                
-    if isinstance(pdb_files, str):
+    if isinstance(pdb_files, list) and len(pdb_files) <= 1:
         return cluster_calc(Atom_distance), Atom_volume                   
     return VdW_cluster, VdW_volume
                 
