@@ -92,6 +92,7 @@ def VdW_interaction(path, pdb_files=None):
     if isinstance(pdb_files, str):
         pdb_files = [pdb_files]
         input = 1
+        print('Input is a string')
     VdW_cluster = {}
     VdW_volume = {}
 
@@ -134,7 +135,8 @@ def VdW_interaction(path, pdb_files=None):
             VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
                
     if (input == 1):
-        return cluster_calc(Atom_distance), Atom_volume                   
+        cluster = cluster_calc(Atom_distance)
+        return cluster, Atom_volume                   
     return VdW_cluster, VdW_volume
                 
                 
