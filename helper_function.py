@@ -29,12 +29,15 @@ def cluster_calc(array):
     return Cluster
 
 #Calculates the volume of intersection between two spheres
-def intersect_vol(array, r1:str, r2:str):
+def intersect_vol(array, r1:str, r2:str, dis = None):   
     import numpy as np
     r1 = float(r1)
     r2 = float(r2)
     vol = array
-    d = array[1:,1:]
+    if dis is not None:
+        d = dis
+    else:
+        d = array[1:,1:]
     vol[1:,1:] = (np.pi*(r2+r1-d)**2 * (d**2 + 2*d*r1 - 3*r1**2 + 2*d*r2 + 6*r1*r2 - 3*r2**2))/(12*d)
     return vol
 
@@ -81,3 +84,12 @@ def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect
     H_id[1:,0] = d_DH[:,1,0]
     angle = np.dstack((angle, H_id))
     return angle
+
+
+
+def remove_nan(array):
+    rows_with_nan = np.insert(np.array([np.all(np.isnan(array[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
+    cols_with_nan = np.insert(np.array([np.all(np.isnan(array[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
+    array = array[~rows_with_nan, :] #delete rows with all nan values
+    array = array[:, ~cols_with_nan] #delete columns with all nan values
+    array[:,0] = array[:,0].astype('int')

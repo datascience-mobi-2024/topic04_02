@@ -42,7 +42,7 @@ def pdb2pqr(input_path, output_path,pdb_files=None):
         os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
 
 #https://www.bioinformation.net/003/002800032008.pdf
-def salt_bridge(path, pdb_files=None):
+def salt_bridge(path, pdb_files=None, remove_nan=None):
     import numpy as np
     import os
     import scipy
@@ -71,10 +71,16 @@ def salt_bridge(path, pdb_files=None):
                         Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
 
             from helper_function import distance
-            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
+            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4, remove_nan = remove_nan)
+    if isinstance(pdb_files, str):
+        return distance(Asp_Glu_array, Lys_Arg_His_array, 4, remove_nan = remove_nan)
     return Salt_bridges
 
-def VdW_interaction(path, pdb_files=None):
+
+
+
+
+def VdW_interaction(path, pdb_files=None, remove_nan=None):
     import numpy as np
     import os
     import scipy
@@ -118,17 +124,23 @@ def VdW_interaction(path, pdb_files=None):
             
             from helper_function import cluster_calc
             Atom_distance = np.nan_to_num(Atom_distance)
-            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
             
             from helper_function import intersect_vol
             Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
             Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
-            VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
-            
+               
+            if remove_nan is not None:
+                from helper_function import remove_nan
+                VdW_cluster = VdW_cluster(Atom_volume)
+                
+            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
+               
+    if isinstance(pdb_files, str):
+        return cluster_calc(Atom_distance), Atom_volume                   
     return VdW_cluster, VdW_volume
                 
                 
-def H_bond_calc(path, pqr_files=None):
+def H_bond_calc(path, pqr_files=None, remove_nan=None):
     import numpy as np
     import os
     import scipy
@@ -198,9 +210,21 @@ def H_bond_calc(path, pqr_files=None):
             
         from helper_function import distance
         from helper_function import angle_calc
+        
         angle = angle_calc(Donor_array, H_array, Acceptor_array)
-        HB_dict[str(pqr_file).split('.')[0]] = angle
+        if remove_nan is not None:
+            from helper_function import remove_nan
+            angle2D = angle[:,:,0]
+            angle2D = remove_nan(angle2D)
+            
+        if isinstance(pqr_file, str):
+            return angle2D
 
+        
+        if isinstance(pqr_files, str):
+            return angle
+        
+        HB_dict[str(pqr_file).split('.')[0]] = angle
     return HB_dict
                                             
 
