@@ -137,7 +137,7 @@ def VdW_interaction(path, pdb_files=None):
     return VdW_cluster, VdW_volume
                 
                 
-def H_bond_calc(path, pqr_files=None, remove_nan=None):
+def H_bond_calc(path, pqr_files=None, remove_nan=False):
     import numpy as np
     import os
     import scipy
@@ -212,16 +212,16 @@ def H_bond_calc(path, pqr_files=None, remove_nan=None):
         from helper_function import remove_nan
         angle2D = angle[:,:,0]
         angle2D = remove_nan(angle2D)
-        if remove_nan is True:
+        if remove_nan == True:
             angle2D = remove_nan(angle2D)
             HB_dict[str(pqr_file).split('.')[0]] = angle2D
         else:
             HB_dict[str(pqr_file).split('.')[0]] = angle
 
 
-    if isinstance(pqr_files, str) and (remove_nan is True):
+    if isinstance(pqr_files, str) and (remove_nan == True):
         return angle
-    elif isinstance(pqr_files, str):
+    elif isinstance(pqr_files, str) and (remove_nan == False):
         return angle2D
     else:
         return HB_dict
