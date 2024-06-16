@@ -205,6 +205,105 @@ def H_bond_calc(path, pqr_files=None):
                                             
 
              
+def aa_mut_select(input_path, pdb_file, output_path, df=False):
+    """
+    This function selects atoms involved in various interactions (salt bridges, hydrogen bonds, 
+    and van der Waals interactions) from a protein structure.
+
+    Args:
+        input_path (str): Path to the directory containing the protein structure file.
+        pdb_file (str): Filename of the protein structure file in PDB format.
+        output_path (str): Path to the directory where the output PQR file will be saved.
+        df (bool, optional): If True, returns a pandas DataFrame containing the information. 
+                                Defaults to False (returns a NumPy array).
+
+    Returns:
+        np.ndarray | pd.DataFrame: A NumPy array containing the selected atom information 
+                                   or a pandas DataFrame if `df` is True.
+    """
+    
+    #import necessary functions
+    from function import salt_bridge
+    from function import H_bond_calc
+    from function import VdW_interaction
+    from function import pdb2pqr
+    from helper_function import remove_nan
+    import os
+    import numpy as np
+    import pandas as pd
+    
+    # get protein name and pqr file name
+    prot_name = pdb_file.split('-')[1]
+    
+    #create pqr file
+    pqr_file = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+
+    if os.path.isfile(os.path.join(output_path, f'{(pdb_file.split(".")[0]).split("-")[1]}.pqr')):
+        print('Pqr file already exists')
+    else:    
+        pdb2pqr(input_path, output_path, pdb_file)
+    
+
+    # Calculate atom features
+    Salt_bridge = salt_bridge(input_path, pdb_file)
+    print('Salt_bridge finished')
+    H_bond = H_bond_calc(output_path, pqr_file)
+    print('H_bond finished')
+    VdW_clust, VdW_vol = VdW_interaction(input_path, pdb_file, by_atom = True)
+    print('VdW_interaction finished')
+    
+    # extract the values for the proteins from the dictionary and delete atoms that dont have a feature (if applicable)
+    Salt_bridge = remove_nan(Salt_bridge[prot_name])
+    H_bond = remove_nan(H_bond[prot_name][:,:,0])
+
+    VdW_clust = VdW_clust[prot_name]
+ 
+
+    
+    
+    #create lists with all aminoacid that are part of a feature
+    atom_S =list(Salt_bridge[0,1:])
+    atom_HA = list(H_bond[0,1:])
+    atom_HD = list(H_bond[1:,0])
+
+    
+    
+    # creates an atom_dict that contains the atom number and the feature it is part of
+    atom_dict = {}
+    for lst, identifier in [(atom_S, "Salt_bridge"), (atom_HA, "Hbond_acc"), (atom_HD, "Hbond_don")]:
+        for atom_number in lst:
+            if atom_number in atom_dict:
+                atom_dict[atom_number] = [atom_dict[atom_number], identifier]
+            else:
+                atom_dict[atom_number] = identifier
+    # Add van der Waals interaction information to the dictionary
+    for k,v in VdW_clust.items():
+        if k in atom_dict:
+            atom_dict[k] = [atom_dict[k], v]
+        else: atom_dict[k] = v
+    atom_sorted = {k: atom_dict[k] for k in sorted(atom_dict)}
+
+
+    # create a dataframe with the atom number and the feature it is part of
+    prot_df = pd.DataFrame(columns = ['Protein','Aminoacid','Aminoacid_number', 'Atom_number', 'Feature'])
+    Protein_array = np.empty((0, 5))
+    with open (os.path.join(output_path, pqr_file)) as f:
+        prot_df_list = []
+        for line in f:
+            line = line.replace('-', '  -')
+            if line.startswith('ATOM'):
+                atom_number = int(line.split()[1])
+                feature = atom_sorted.get(atom_number)
+                if atom_number in atom_sorted.keys():
+                    atom_line = np.array([[str(prot_name),str(line.split()[3]), float(line.split()[4]), float(line.split()[1]), str(feature)]])
+                    Protein_array = np.append(Protein_array, atom_line, axis=0)
+    
+    # return the dataframe if df is True
+    if df:
+        Prot_df = pd.DataFrame(Protein_array, columns = ['Protein','Aminoacid','Aminoacid_number', 'Atom_number', 'Feature'])
+        return Prot_df
+    else:
+        return Protein_array
                 
             
   
