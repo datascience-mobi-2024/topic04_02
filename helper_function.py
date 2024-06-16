@@ -1,7 +1,7 @@
 ########################### Used for 3D structure analysis ###########################
 
 #Clusters atoms if they are within a set distance
-def cluster_calc(array):
+def cluster_calc(array, by_atom=False):
     Cluster ={}
     from scipy.sparse.csgraph import connected_components
     from scipy.sparse import lil_matrix
@@ -20,13 +20,25 @@ def cluster_calc(array):
     set_components = set(n_components) #unique number of clusters
     list_components = n_components.tolist()
 
-    for i in range(len(set_components)):
-        atom_number = []
-        for n in range(len(list_components)):
-            if list_components[n] == i:
-                atom_number.append(adjacency_matrix[list_components[0],n+1])   
-                Cluster[f'Cluster {str(i)}'] = atom_number
-    return Cluster
+    if by_atom:
+        atom_cluster_dict = {}
+        for i in range(len(list_components)):
+            for n in range(len(list_components)):
+                if list_components[n] != 0:  # exclude the 0th row/column (dummy)
+                    atom_number = adjacency_matrix[list_components[0], n + 1]
+                    cluster_name = f'Cluster {str(list_components[i])}'
+                    atom_cluster_dict[atom_number] = cluster_name
+        return atom_cluster_dict
+    else:
+        for i in range(len(set_components)):
+            atom_number = []
+            for n in range(len(list_components)):
+                if list_components[n] == i:
+                    atom_number.append(adjacency_matrix[list_components[0], n + 1])
+                    Cluster[f'Cluster {str(i)}'] = atom_number
+        return Cluster
+
+
 
 #Calculates the volume of intersection between two spheres
 def intersect_vol(array, r1:str, r2:str, dis = None):   
