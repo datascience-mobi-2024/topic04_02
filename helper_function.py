@@ -20,22 +20,20 @@ def cluster_calc(array, by_atom=False):
     set_components = set(n_components) #unique number of clusters
     list_components = n_components.tolist()
 
+  
+    for i in range(len(set_components)):
+        atom_number = []
+        for n in range(len(list_components)):
+            if list_components[n] == i:
+                atom_number.append(adjacency_matrix[list_components[0], n + 1])
+                Cluster[f'Cluster {str(i)}'] = atom_number
     if by_atom:
-        atom_cluster_dict = {}
-        for i in range(len(list_components)):
-            for n in range(len(set_components)):
-                if list_components[n] != 0:  
-                    atom_number = adjacency_matrix[list_components[0], n + 1]
-                    cluster_name = f'Cluster {str([i])}'
-                    atom_cluster_dict[atom_number] = cluster_name
-        return atom_cluster_dict
+        clust_inv = {}
+        for cluster_name, atom_list in Cluster.items():
+            for atom_number in atom_list:
+                clust_inv[atom_number] = cluster_name
+        return clust_inv
     else:
-        for i in range(len(set_components)):
-            atom_number = []
-            for n in range(len(list_components)):
-                if list_components[n] == i:
-                    atom_number.append(adjacency_matrix[list_components[0], n + 1])
-                    Cluster[f'Cluster {str(i)}'] = atom_number
         return Cluster
 
 
