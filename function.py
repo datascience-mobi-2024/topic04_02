@@ -38,7 +38,7 @@ def pdb2pqr(input_path, output_path,pdb_files=None):
     if isinstance(pdb_files, str):
         pdb_files = [pdb_files]
     for pdb_file in pdb_files:
-        name = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+        name = f'{(pdb_file.split(".")[0]).split("-")[1]}.pqr'
         os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
 
 #https://www.bioinformation.net/003/002800032008.pdf
@@ -204,10 +204,6 @@ def H_bond_calc(path, pqr_files=None):
     return HB_dict
                                             
 
-             
-                
-            
-  
 
 
 
@@ -327,4 +323,4 @@ def pain(data, by= None, lower = 0.1, upper = 0.9):
         upper_threshold = data.quantile(upper)
         return data[(data <= lower_threshold) | (data >= upper_threshold)].reset_index(drop=True)
     else:
-        raise ValueError('Maxi ist ein Idiot')
+        raise ValueError('Invalid data input')
