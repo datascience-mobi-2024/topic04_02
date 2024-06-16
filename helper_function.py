@@ -23,10 +23,10 @@ def cluster_calc(array, by_atom=False):
     if by_atom:
         atom_cluster_dict = {}
         for i in range(len(list_components)):
-            for n in range(len(list_components)):
-                if list_components[n] != 0:  # exclude the 0th row/column (dummy)
+            for n in range(len(set_components)):
+                if list_components[n] != 0:  
                     atom_number = adjacency_matrix[list_components[0], n + 1]
-                    cluster_name = f'Cluster {str(list_components[i])}'
+                    cluster_name = f'Cluster {str([i])}'
                     atom_cluster_dict[atom_number] = cluster_name
         return atom_cluster_dict
     else:
