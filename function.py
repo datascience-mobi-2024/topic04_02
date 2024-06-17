@@ -242,7 +242,6 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
         print('Pqr file already exists')
     else:    
         pdb2pqr(input_path, output_path, pdb_file)
-    
 
     # Calculate atom features
     Salt_bridge = salt_bridge(input_path, pdb_file)
@@ -257,17 +256,12 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     H_bond = remove_nan(H_bond[prot_name][:,:,0])
 
     VdW_clust = VdW_clust[prot_name]
- 
 
-    
-    
     #create lists with all aminoacid that are part of a feature
     atom_S =list(Salt_bridge[0,1:])
     atom_HA = list(H_bond[0,1:])
     atom_HD = list(H_bond[1:,0])
 
-    
-    
     # creates an atom_dict that contains the atom number and the feature it is part of
     atom_dict = {}
     for lst, identifier in [(atom_S, "Salt_bridge"), (atom_HA, "Hbond_acc"), (atom_HD, "Hbond_don")]:
@@ -283,7 +277,6 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
         else: atom_dict[k] = v
     atom_sorted = {k: atom_dict[k] for k in sorted(atom_dict)}
 
-
     # create a dataframe with the atom number and the feature it is part of
     prot_df = pd.DataFrame(columns = ['Protein','Aminoacid','Aminoacid_number', 'Atom_number', 'Feature'])
     Protein_array = np.empty((0, 5))
@@ -297,6 +290,7 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
                 if atom_number in atom_sorted.keys():
                     atom_line = np.array([[str(prot_name),str(line.split()[3]), float(line.split()[4]),float(line.split()[1]), str(feature)]])
                     Protein_array = np.append(Protein_array, atom_line, axis=0)
+                    
     # return the dataframe if df is True
     if df:
         Prot_df = pd.DataFrame(Protein_array, columns = ['Protein','Aminoacid','Aminoacid_number', 'Atom_number', 'Feature'])
@@ -305,7 +299,8 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
         return Protein_array
 
 
-def free_aa (path, file, prot_arr):
+
+def free_aa (path, file, functional_aa):
     """
     Identifies and collects free amino acids from a PDB or PQR file.
 
