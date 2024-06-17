@@ -205,7 +205,7 @@ def H_bond_calc(path, pqr_files=None):
                                             
 
              
-def aa_mut_select(input_path, pdb_file, output_path, df=False):
+def functional_aa(input_path, pdb_file, output_path, df=False):
     """
     This function selects atoms involved in various interactions (salt bridges, hydrogen bonds, 
     and van der Waals interactions) from a protein structure.
@@ -295,16 +295,47 @@ def aa_mut_select(input_path, pdb_file, output_path, df=False):
                 atom_number = int(line.split()[1])
                 feature = atom_sorted.get(atom_number)
                 if atom_number in atom_sorted.keys():
-                    atom_line = np.array([[str(prot_name),str(line.split()[3]), float(line.split()[4]), float(line.split()[1]), str(feature)]])
+                    atom_line = np.array([[str(prot_name),str(line.split()[3]), float(line.split()[4]),float(line.split()[1]), str(feature)]])
                     Protein_array = np.append(Protein_array, atom_line, axis=0)
-    
     # return the dataframe if df is True
     if df:
         Prot_df = pd.DataFrame(Protein_array, columns = ['Protein','Aminoacid','Aminoacid_number', 'Atom_number', 'Feature'])
         return Prot_df
     else:
         return Protein_array
-                
+
+
+def free_aa (path, file, prot_arr):
+    """
+    Identifies and collects free amino acids from a PDB or PQR file.
+
+    This function takes a path to a PQR file, the filename of the PQR file, and a NumPy array containing protein information as input.
+    It iterates through the PQR file and identifies residues that are not involved in Salt bridges, Hydrogen bonds, and Van der Waals interactions.
+
+    Args:
+        path (str): Path to the directory containing the PQR file.
+        pqr_file (str): Filename of the PQR file.
+        prot_arr (np.ndarray): NumPy array containing protein information (assumed to have residue types in the 2nd column).
+
+    Returns:
+        np.ndarray: A NumPy array containing information about free amino acids (protein name, residue name, residue number).
+    """
+       
+    import os
+    import numpy as np
+    
+    functional_aa = sorted(set(prot_arr[:,2]))
+    free_aa = np.empty((0, 3))
+    prot_name = file.split('.')[0]
+    with open(os.path.join(path, str(file))) as f:
+        for line in f:
+            line = line.replace('-', '  -')
+            if line.startswith('ATOM'):
+                aa_number = line.split()[4]
+                if aa_number not in functional_aa and aa_number not in free_aa[:,2]:
+                    aa_line = np.array([[str(prot_name), line.split()[3], line.split()[4]]])
+                    free_aa = np.append(free_aa, aa_line, axis=0)
+    return free_aa                
             
   
 
