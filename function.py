@@ -204,7 +204,19 @@ def H_bond_calc(path, pqr_files=None):
     return HB_dict
                                             
 
-             
+ 
+
+
+
+
+
+
+
+
+
+
+
+#-------------------------------------------------Mutation Creation-------------------------------------------------#             
 def functional_aa(input_path, pdb_file, output_path, df=False):
     """
     This function selects atoms involved in various interactions (salt bridges, hydrogen bonds, 
@@ -319,7 +331,7 @@ def free_aa (path, file, functional_aa):
     import os
     import numpy as np
     
-    functional_aa = sorted(set(prot_arr[:,2]))
+    functional_aa = sorted(set(functional_aa[:,2]))
     free_aa = np.empty((0, 3))
     prot_name = file.split('.')[0]
     with open(os.path.join(path, str(file))) as f:
