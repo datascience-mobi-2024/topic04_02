@@ -105,3 +105,58 @@ def remove_nan(array):
     array = array[:, ~cols_with_nan] #delete columns with all nan values
     array[:,0] = array[:,0].astype('int')
     return array
+
+
+
+def pdb2AA(path, file_name):
+    """
+    Extracts the amino acid sequence from a PDB file.
+    
+    Args:
+        path (str): Path to the directory containing the PDB file.
+        file_name (str): Filename of the PDB file.
+
+    Returns:
+        list: A list containing the 1-letter amino acid sequence from the PDB file.
+    """
+    import os
+    AA_dict = {
+        "ALA": "A",
+        "CYS": "C",
+        "ASP": "D",
+        "GLU": "E",
+        "PHE": "F",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LYS": "K",
+        "LEU": "L",
+        "MET": "M",
+        "ASN": "N",
+        "PRO": "P",
+        "GLN": "Q",
+        "ARG": "R",
+        "SER": "S",
+        "THR": "T",
+        "VAL": "V",
+        "TRP": "W",
+        "TYR": "Y",
+        "SEC": "U",
+        "PYL": "O",
+    }
+    
+    #extract aminoacid list
+    with open(os.path.join(path, file_name), 'r') as f:
+        aa1 = []
+        aa_count = 1
+        for line in f:
+            line = line.replace('-', '  -')
+            if line.startswith('ATOM'):
+                number = int(line.split()[5])
+                aa = str(line.split()[3])
+                if number == 1 and AA_dict[aa] not in aa1:
+                    aa1.append(AA_dict[aa])
+                if number == aa_count and AA_dict[aa] != aa1[-1]:
+                    aa1.append(AA_dict[aa])
+                aa_count = number         
+    return aa1
