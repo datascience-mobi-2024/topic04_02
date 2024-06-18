@@ -147,6 +147,7 @@ def pdb2AA(path, file_name):
     
     #extract aminoacid list
     with open(os.path.join(path, file_name), 'r') as f:
+        ## path.join(path, file_name)
         aa1 = []
         aa_count = 1
         for line in f:
@@ -158,5 +159,6 @@ def pdb2AA(path, file_name):
                     aa1.append(AA_dict[aa])
                 if number == aa_count and len(aa1)+1 == number:
                     aa1.append(AA_dict[aa])
-                aa_count = number         
-    return aa1
+                aa_count = number
+    AA_string = ''.join(aa1)
+    return AA_string
