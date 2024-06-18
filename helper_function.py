@@ -162,3 +162,35 @@ def pdb2AA(path, file_name):
                 aa_count = number
     AA_string = ''.join(aa1)
     return AA_string
+
+def AAA2A(AA:list, str=True):
+    AA_dict = {
+        "ALA": "A",
+        "CYS": "C",
+        "ASP": "D",
+        "GLU": "E",
+        "PHE": "F",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LYS": "K",
+        "LEU": "L",
+        "MET": "M",
+        "ASN": "N",
+        "PRO": "P",
+        "GLN": "Q",
+        "ARG": "R",
+        "SER": "S",
+        "THR": "T",
+        "VAL": "V",
+        "TRP": "W",
+        "TYR": "Y",
+        "SEC": "U",
+        "PYL": "O",
+        }
+    for n in range(len(AA)):
+        AA[n] = AA_dict[AA[n]]
+    if str:
+        return "".join(AA)
+    else:
+        return AA

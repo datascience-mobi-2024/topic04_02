@@ -1,9 +1,10 @@
 #function that calculates the relative amino acid composition based on sequence entry and definded amino acid property
-def rel_aa_comp(Sequence:str, AA_property:str) -> str: 
+def rel_aa_comp(Sequence:str, AA_property): 
     count = 0
-    for element in Sequence:  
-        if element in AA_property:
-            count += 1
+    for n in AA_property:
+        for i in Sequence:  
+            if n ==i:
+                count += 1
     return count/len(Sequence)
 
 def rel_aa(Sequence:str, AA_property:str) -> str: 
@@ -312,9 +313,9 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
 
 
 
-def free_aa (path, file, functional_aa):
+def free_aa (path, pdb_file, functional_aa):
     """
-    Identifies and collects free amino acids from a PDB or PQR file.
+    Identifies and collects free amino acids from a PDB file.
 
     This function takes a path to a PQR file, the filename of the PQR file, and a NumPy array containing protein information as input.
     It iterates through the PQR file and identifies residues that are not involved in Salt bridges, Hydrogen bonds, and Van der Waals interactions.
@@ -333,14 +334,14 @@ def free_aa (path, file, functional_aa):
     
     functional_aa = sorted(set(functional_aa[:,2]))
     free_aa = np.empty((0, 3))
-    prot_name = file.split('.')[0]
-    with open(os.path.join(path, str(file))) as f:
+    prot_name = pdb_file.split('-')[1]
+    with open(os.path.join(path, str(pdb_file))) as f:
         for line in f:
             line = line.replace('-', '  -')
             if line.startswith('ATOM'):
-                aa_number = line.split()[4]
+                aa_number = line.split()[5]
                 if aa_number not in functional_aa and aa_number not in free_aa[:,2]:
-                    aa_line = np.array([[str(prot_name), line.split()[3], line.split()[4]]])
+                    aa_line = np.array([[str(prot_name), line.split()[3], line.split()[5]]])
                     free_aa = np.append(free_aa, aa_line, axis=0)
     return free_aa                
             
