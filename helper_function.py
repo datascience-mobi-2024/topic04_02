@@ -156,7 +156,7 @@ def pdb2AA(path, file_name):
                 aa = str(line.split()[3])
                 if number == 1 and AA_dict[aa] not in aa1:
                     aa1.append(AA_dict[aa])
-                if number == aa_count and AA_dict[aa] != aa1[-1]:
+                if number == aa_count and len(aa1)+1 == number:
                     aa1.append(AA_dict[aa])
                 aa_count = number         
     return aa1
