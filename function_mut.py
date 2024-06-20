@@ -25,9 +25,16 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
     #positive features
     for key in feature_pos:
         if len(key) <=2:
-            weighted_diff = abs(rel_aa_comp(aa, key) - ideal_pos[key] * feature_pos[key])
+            
+            weighted_diff = abs(rel_aa_comp(aa, key) - (ideal_pos[key] * feature_pos[key]))
             WT_weight[key] = weighted_diff
             sum_dev += weighted_diff
+            
+        elif 'motif' in key:
+            weighted_diff = abs(rel_aa_comp(aa, key[0:2]) - (ideal_pos[key] * feature_pos[key]))
+            WT_weight[key] = weighted_diff
+            sum_dev += weighted_diff
+            
     
     #negative features
     for key in feature_neg:
@@ -35,12 +42,17 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
             weighted_diff = abs(rel_aa_comp(aa, key) - ideal_neg[key] * feature_neg[key])
             WT_weight[key] = weighted_diff
             sum_dev += weighted_diff
+            
+        elif 'motif' in key:
+            weighted_diff = abs(rel_aa_comp(aa, key[0:2]) - (ideal_pos[key] * feature_pos[key]))
+            WT_weight[key] = weighted_diff
+            sum_dev += weighted_diff    
 
     if sort:
         sorted_keys = sorted(WT_weight.items(), key=operator.itemgetter(1), reverse=True)
         return sum_dev, sorted_keys
     else:
-        return sum_dev, WT_weight
+        return sum_dev, WT_weight #sum_dev is a positive value of all deviations, higher values indicate a worse fit
     
     
 
@@ -74,8 +86,11 @@ def mut_live_test (AA_list, Mut_list, pos_corr, neg_corr, ideal_pos_value, ideal
     AA_mut = mut_apply(AA_list, Mut_list)
     AA_muts = ''.join(AA_mut)
     MUT_sum, WT_diff = diff_weighted(pos_corr, neg_corr, AA_muts, ideal_pos_value, ideal_neg_value)
-    Diff = WT_sum - MUT_sum
-    return Diff
+    Diff = abs(WT_sum) - abs(MUT_sum) # calculates the difference between the weighted sum of deviations before and after the mutation
+    
+    # if the difference is positive the mutation is beneficial
+    # if Diff is negative the mutation is not beneficial
+    return Diff #The higher the difference the better the mutation
     
     
 def mutator2(AA_list:list, free_AA, deviation,pos_corr:dict, sorted_freq_pos, neg_corr:dict, conserv_substitution, ideal_pos_value, ideal_neg_value):
