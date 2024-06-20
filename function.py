@@ -48,6 +48,8 @@ def salt_bridge(path, pdb_files=None):
     import os
     import scipy
     from scipy.spatial.distance import cdist
+    import re
+    
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
     if isinstance(pdb_files, str):
@@ -60,7 +62,8 @@ def salt_bridge(path, pdb_files=None):
         
         with open(os.path.join(path, str(pdb_file))) as f:
             for line in f:
-                line = line.strip()
+                #line = line.replace('-', '  -')
+               #line = re.sub(r'([A])(\d)', r'\1 \2', line)
                 if line.startswith('ATOM'):
                     if ('ASP' in line and 'OD' in line) or ('GLU' in line and 'OE' in line):
                         line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
@@ -80,6 +83,7 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
     import os
     import scipy
     from scipy.spatial.distance import cdist
+    import re
     
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
@@ -101,6 +105,8 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
             X_array = np.array([[]])
             Atom_list = ['C', 'N', 'O']
             for line in f:
+                #line = line.replace('-', '  -')
+                #line = re.sub(r'([A])(\d)', r'\1 \2', line)
                 line = line.strip()
                 if line.startswith('ATOM'):
                     if ('LEU' in line and line[12:17].strip() in Atom_list) or ('VAL' in line and line[12:17].strip() in Atom_list) or ('ILE' in line and line[12:17].strip() in Atom_list):
@@ -244,6 +250,7 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     import os
     import numpy as np
     import pandas as pd
+    import re
     
     # get protein name and pqr file name
     prot_name = pdb_file.split('-')[1]
@@ -296,7 +303,8 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     with open (os.path.join(output_path, pqr_file)) as f:
         prot_df_list = []
         for line in f:
-            line = line.replace('-', '  -')
+            #line = line.replace('-', '  -')
+            #line = re.sub(r'([A])(\d)', r'\1 \2', line)
             if line.startswith('ATOM'):
                 atom_number = int(line.split()[1])
                 feature = atom_sorted.get(atom_number)
@@ -331,17 +339,42 @@ def free_aa (path, pdb_file, functional_aa):
        
     import os
     import numpy as np
-    
+    import re
+    AA_dict = {
+        "ALA": "A",
+        "CYS": "C",
+        "ASP": "D",
+        "GLU": "E",
+        "PHE": "F",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LYS": "K",
+        "LEU": "L",
+        "MET": "M",
+        "ASN": "N",
+        "PRO": "P",
+        "GLN": "Q",
+        "ARG": "R",
+        "SER": "S",
+        "THR": "T",
+        "VAL": "V",
+        "TRP": "W",
+        "TYR": "Y",
+        "SEC": "U",
+        "PYL": "O",
+    }
     functional_aa = sorted(set(functional_aa[:,2]))
     free_aa = np.empty((0, 3))
     prot_name = pdb_file.split('-')[1]
     with open(os.path.join(path, str(pdb_file))) as f:
         for line in f:
             line = line.replace('-', '  -')
+            line = re.sub(r'([A])(\d)', r'\1 \2', line)
             if line.startswith('ATOM'):
                 aa_number = line.split()[5]
                 if aa_number not in functional_aa and aa_number not in free_aa[:,2]:
-                    aa_line = np.array([[str(prot_name), line.split()[3], line.split()[5]]])
+                    aa_line = np.array([[str(prot_name), AA_dict[line.split()[3]], line.split()[5]]])
                     free_aa = np.append(free_aa, aa_line, axis=0)
     return free_aa                
             

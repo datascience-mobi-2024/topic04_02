@@ -108,7 +108,7 @@ def remove_nan(array):
 
 
 
-def pdb2AA(path, file_name):
+def pdb2AA(path, file_name, list_output=True):
     """
     Extracts the amino acid sequence from a PDB file.
     
@@ -148,10 +148,12 @@ def pdb2AA(path, file_name):
     #extract aminoacid list
     with open(os.path.join(path, file_name), 'r') as f:
         ## path.join(path, file_name)
+        import re
         aa1 = []
         aa_count = 1
         for line in f:
             line = line.replace('-', '  -')
+            line = re.sub(r'([A])(\d)', r'\1 \2', line)
             if line.startswith('ATOM'):
                 number = int(line.split()[5])
                 aa = str(line.split()[3])
@@ -160,8 +162,12 @@ def pdb2AA(path, file_name):
                 if number == aa_count and len(aa1)+1 == number:
                     aa1.append(AA_dict[aa])
                 aa_count = number
-    AA_string = ''.join(aa1)
-    return AA_string
+    if list_output:
+        return aa1
+    else:
+        AA_string = ''.join(aa1)
+        return AA_string
+
 
 def AAA2A(AA:list, str=True):
     AA_dict = {
@@ -194,3 +200,13 @@ def AAA2A(AA:list, str=True):
         return "".join(AA)
     else:
         return AA
+    
+    
+def ArraySlice (Array, possible_mutations):
+    import numpy as np
+    free_AA = Array
+    index_list = [i.split('-')[1] for i in possible_mutations]
+    mask = ~np.isin(Array, index_list)
+    mask = np.all(mask, axis=1)
+    filtered_AA = free_AA[mask]
+    return filtered_AA
