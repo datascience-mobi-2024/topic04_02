@@ -210,3 +210,60 @@ def ArraySlice (Array, possible_mutations):
     mask = np.all(mask, axis=1)
     filtered_AA = free_AA[mask]
     return filtered_AA
+
+def fasparse(faspath):
+    import numpy as np
+    helixl = []
+    sheetl = []
+    data = np.loadtxt(faspath, dtype={'names': ('index', 'col1', 'col2', 'val1', 'val2', 'val3'),'formats': ('i4', 'S1', 'S1', 'f4', 'f4', 'f4')})
+    indiceshelix = data['index'][data['col2'] == b'H']
+    indicessheet = data['index'][data['col2'] == b'E']
+    helix = np.split(indiceshelix, np.where(np.diff(indiceshelix) != 1)[0]+1)
+    sheet = np.split(indicessheet, np.where(np.diff(indicessheet) != 1)[0]+1)
+    return [helix, sheet]
+
+
+
+
+def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, seed):
+    """
+    Reduces the possible substitutions for each amino acid based on secondary structure predictions.
+
+    Args:
+        sec_pred: A list of length 2 containing secondary structure predictions for each position in the sequence.
+          - sec_pred[0]: List of characters representing helix ('H') or coil ('-') predictions for each position.
+          - sec_pred[1]: List of characters representing sheet ('E') or coil ('-') predictions for each position.
+        conserv_subst_dict: A dictionary where keys are amino acids and values are lists of their conservative substitutions.
+        free_AA_dict: A dictionary where keys are amino acid position (in protein) and value is aminoacid.
+
+    Returns:
+        A dictionary where keys are amino acids and values are reduced lists of possible substitutions based on secondary structure predictions.
+    """
+    import random
+    
+    random.seed(seed)
+    
+    helix_forming = ['E', 'A', 'L', 'M', 'Q', 'K', 'R', 'H', 'I', 'W', 'F']
+    sheet_forming = ['L', 'M', 'V', 'I', 'Y', 'C', 'W', 'F', 'T', 'U']
+    
+    #helixvalues = {'E':1.59,'A':1.41,'L':1.34,'M':1.3,'Q':1.27,'K':1.23,'R':1.21,'H':1.05,'V':0.9,'I':1.09,'Y':0.74,'C':0.66,'W':1.02,'F':1.16,'T':0.76,'G':0.43,'N':0.76,'P':0.34,'S':0.57,'D':0.99,'U':0.66}
+    #sheetvalues = {'E':0.52,'A':0.72,'L':1.22,'M':1.14,'Q':0.98,'K':0.69,'R':0.84,'H':0.8,'V':1.87,'I':1.67,'Y':1.45,'C':1.4,'W':1.35,'F':1.33,'T':1.17,'G':0.58,'N':0.48,'P':0.31,'S':0.96,'D':0.39,'U':1.4}
+
+
+    helix = sec_pred[0]
+    sheet = sec_pred[1]
+    Possible_subst = {}
+    
+    for key in free_AA_dict:
+        aminoacid = free_AA_dict[key]
+        if any(key in n for n in helix):
+            possible_subst= list(set(conserv_subst_dict[aminoacid]).intersection(set(helix_forming)))
+        elif any(key in n for n in sheet):
+            possible_subst = list(set(free_AA_dict[key]).intersection(set(sheet_forming)))
+        else:
+            possible_subst = conserv_subst_dict[aminoacid]
+            
+        random.shuffle(possible_subst)
+        Possible_subst[key] = possible_subst
+        
+    return Possible_subst

@@ -211,7 +211,36 @@ def H_bond_calc(path, pqr_files=None):
     return HB_dict
                                             
 
- 
+def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
+    import os
+    from helper_function import fasparse
+    os.getcwd()
+    # call s4pred and create fas file
+    fastapath = os.path.join(output_path,f'{prot}.fasta')
+    faspath = os.path.join(output_path,f'{prot}.fas')
+    abs_fasta = os.path.abspath(fastapath)
+    abs_fas = os.path.abspath(faspath)
+    print(abs_fasta)
+    print(abs_fas)    
+    if os.path.isfile(fastapath):
+        print(f'fasta file already exists {fastapath}')
+    else:
+        with open(os.path.join(output_path,f'{prot}.fasta'), "w") as fasta_file:
+            fasta_file.write(f">{prot}\n{AA_seq}\n")
+        print(f'fasta file created {fastapath}')
+        
+    if os.path.isfile(faspath):
+        print('fas file already exists')
+    else:
+        os.chdir(directory_S4pred)
+        os.system(f'python3 run_model.py "{abs_fasta}" > "{abs_fas}"')
+        os.chdir('../../')
+        print('fas file created')
+     
+    #read fas file and   
+    sec_pred = fasparse(abs_fas)    
+
+    return sec_pred 
 
 
 
@@ -309,7 +338,7 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
                 atom_number = int(line.split()[1])
                 feature = atom_sorted.get(atom_number)
                 if atom_number in atom_sorted.keys():
-                    atom_line = np.array([[str(prot_name),str(line.split()[3]), float(line.split()[4]),float(line.split()[1]), str(feature)]])
+                    atom_line = np.array([[str(prot_name),str(line.split()[3]), int(line.split()[4]),int(line.split()[1]), str(feature)]])
                     Protein_array = np.append(Protein_array, atom_line, axis=0)
                     
     # return the dataframe if df is True
