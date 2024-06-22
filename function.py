@@ -220,8 +220,7 @@ def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
     faspath = os.path.join(output_path,f'{prot}.fas')
     abs_fasta = os.path.abspath(fastapath)
     abs_fas = os.path.abspath(faspath)
-    print(abs_fasta)
-    print(abs_fas)    
+
     if os.path.isfile(fastapath):
         print(f'fasta file already exists {fastapath}')
     else:

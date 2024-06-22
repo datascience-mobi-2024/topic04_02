@@ -34,9 +34,19 @@ def SPARC(data:str, name, datapath, directoryS4):
     features.index = prokaryotes1.drop(columns='meltPoint').columns
     with open(os.path.join(datapath,f'{name}.fasta'), "w") as fasta_file:
         fasta_file.write(f">{name}\n{data}\n")
-    os.chdir(directoryS4)
+    
     fastapath = os.path.join(datapath,f'{name}.fasta')
     faspath = os.path.join(datapath,f'{name}.fas')
+    if datapath.startswith('.'):                #added to work for dynamic paths
+        fastapath = f'{os.path.abspath(fastapath)}'
+        faspath = f'{os.path.abspath(faspath)}'
+    
+    os.chdir(directoryS4)#replace with AA2s4pred funciton
+    print(os.getcwd())
+    #fastapath = os.path.join(datapath,f'{name}.fasta')
+    #faspath = os.path.join(datapath,f'{name}.fas')
+
+    print(f'Faspath \n {faspath}\n Fastapath \n {fastapath}')
     os.system(f'python3 run_model.py "{fastapath}" > "{faspath}"')
     os.chdir('../../')
     Protlen = len(data)
