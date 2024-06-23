@@ -1,3 +1,138 @@
+pos_corr = {'YR': 0.492442, 
+                'RP': 0.480594, 
+                'RG': 0.442533, 
+                'R': 0.432905, 
+                'WR': 0.392523, 
+                'YP': 0.390709, 
+                'LR': 0.386596, 
+                'FR': 0.376553, 
+                'VR': 0.370241, 
+                'ER': 0.369174, 
+                'RC': 0.357052, 
+                'Rhelix': 0.349204, # percentage of R in all helices
+                'MR': 0.343496, 
+                'P': 0.340082, 
+                'PG': 0.338434, 
+                'EAmotif': 0.332202, # EA hinterenander
+                'LP': 0.330337, 
+                'EP': 0.328569, 
+                'RH': 0.326193, 
+                'AR': 0.324355, 
+                'ARmotif': 0.3241, # AR hinterenander
+                'NR': 0.323378}
+neg_corr = {'QT': -0.52935, 
+                'MQ': -0.507329, 
+                'QS': -0.502697, 
+                'QC': -0.493738, 
+                'Q': -0.469765, 
+                'QD': -0.466556, 
+                'QH': -0.455041, 
+                'NQ': -0.435562, 
+                'IQ': -0.429683, 
+                'FQ': -0.42363, 
+                'WQ': -0.420057, 
+                'QK': -0.41872, 
+                'PolarAA': -0.406035, 
+                'ST': -0.396185, 
+                'Qhelix': -0.37895, 
+                'TC': -0.364763, 
+                'MT': -0.359458, 
+                'TH': -0.346921, 
+                'TD': -0.34469, 
+                'SH': -0.327684, 
+                'SC': -0.321686, 
+                'T': -0.321208}
+
+ideal_pos_value = {'AR': 0.19577028919092312, 
+                       'VR': 0.16570774850840858,
+                       'LR': 0.22057443760531548,
+                       'LP': 0.19913083779456836,
+                       'MR': 0.10189569954318338,
+                       'FR': 0.1214807452476434,
+                       'WR': 0.09732041140609597,
+                       'NR': 0.10350733491352844,
+                       'YR': 0.11505796446768121,
+                       'YP': 0.09361436465693411,
+                       'ER': 0.1750096588731577,
+                       'EP': 0.15356605906241058,
+                       'RH': 0.10505828276892132,
+                       'RC': 0.0895071066024632,
+                       'RP': 0.14867680267495723,
+                       'RG': 0.1743851008086472,
+                       'PG': 0.15294150099790005,
+                       'PolarAA': 0.14402202391640712,
+                       'R': 0.08506020124285214,
+                       'P': 0.06361660143210504,
+                       'ARmotif': 0.010758762261349177,
+                       'EAmotif': 0.01633251571740483,
+                       'Rhelix': 0.10373774208196636
+                       }
+ideal_neg_value = {'IQ': 0.05490211183163266,
+                    'MQ': 0.03973022298244349,
+                    'MT': 0.054568274035922376,
+                    'FQ': 0.05931526868690351,
+                    'WQ': 0.03515493484535609,
+                    'NQ': 0.041341858352788544,
+                    'QS': 0.057844351285310555,
+                    'QT': 0.06062750041770345,
+                    'QD': 0.06216042713743332,
+                    'QH': 0.04289280620818142,
+                    'QK': 0.06281534035966867,
+                    'QC': 0.027341630041723304,
+                    'ST': 0.07268240233878943,
+                    'SH': 0.054947708129267414,
+                    'SC': 0.03939653196280929,
+                    'TD': 0.0769984781909122,
+                    'TH': 0.0577308572616603,
+                    'TC': 0.04217968109520218,
+                    'Q': 0.022894724682112268,
+                    'T': 0.03773277573559115,
+                    'PolarAA': 0.14402202391640712, 
+                    'Qhelix': 0.02831461743013483
+                    }
+#possible substitutions for each aminoacid, taken from literature
+#https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003674
+conserv_subst = {
+        'A': ['D', 'E', 'G', 'S', 'T'],
+        'C': ['G', 'R', 'S', 'W', 'Y'],
+        'D': ['A', 'E', 'G', 'H', 'N', 'V', 'Y'],
+        'E': ['A', 'D', 'G', 'K', 'Q', 'V'],
+        'F': ['I', 'L', 'Y'],
+        'G': ['A', 'C', 'D', 'E', 'R'],
+        'H': ['D', 'L', 'N', 'P', 'Q', 'R', 'Y'],
+        'I': ['F', 'L', 'M', 'N', 'V'],
+        'K': ['E', 'M', 'N', 'Q', 'R', 'T'],
+        'L': ['F', 'H', 'I', 'M', 'P', 'Q', 'R', 'V', 'W'],
+        'M': ['I', 'K', 'L', 'R', 'T', 'V'],
+        'N': ['D', 'H', 'I', 'K', 'S', 'T', 'Y'],
+        'P': ['H', 'L', 'Q', 'R', 'S'],
+        'Q': ['E', 'H', 'K', 'L', 'P', 'R'],
+        'R': ['C', 'G', 'H', 'K', 'L', 'M', 'P', 'Q', 'T', 'W'],
+        'S': ['A', 'C', 'N', 'P', 'T', 'W', 'Y'],
+        'T': ['A', 'K', 'M', 'N', 'R', 'S'],
+        'V': ['D', 'E', 'I', 'L', 'M'],
+        'W': ['C', 'L', 'R', 'S'],
+        'Y': ['C', 'D', 'F', 'H', 'N'],
+        }
+non_conservative_substitutions = {
+        'A': ['P', 'V'],
+        'C': ['F'],
+        'F': ['C', 'S', 'V'],
+        'G': ['S', 'V', 'W'],
+        'I': ['K', 'R', 'S', 'T'],
+        'K': ['I'],
+        'L': ['S'],
+        'P': ['A', 'T'],
+        'Q': ['E', 'K'],
+        'R': ['I', 'S'],
+        'S': ['F', 'G', 'I', 'L', 'R'],
+        'T': ['I', 'P'],
+        'V': ['A', 'F', 'G'],
+        'W': ['G'],
+        }
+
+
+
 def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:dict, sec_prediction, sort = True, sum_only = False):
     """
     Calculates the weighted sum of deviations for a given amino acid ('aa') based on positive and negative features.
@@ -45,8 +180,9 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
                 for helix in helices:
                     if aa_pos+1 in helix:
                         aa_helix.append(aa[aa_pos])
-            weighted_diff = abs(rel_aa_comp(''.join(aa_helix), feature) - (ideal_pos[key] * feature_pos[key]))
-            WT_weight[key] = weighted_diff
+            if len(aa_helix) > 0:
+                weighted_diff = abs(rel_aa_comp(''.join(aa_helix), feature) - (ideal_pos[key] * feature_pos[key]))
+                WT_weight[key] = weighted_diff
             sum_dev += weighted_diff
     
     #negative features
@@ -72,8 +208,9 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
                 for helix in helices:
                     if aa_pos+1 in helix:
                         aa_helix.append(aa[aa_pos])
-            weighted_diff = abs(rel_aa_comp(''.join(aa_helix), feature) - (ideal_neg[key] * feature_neg[key]))
-            WT_weight[key] = weighted_diff
+            if len(aa_helix) > 0:
+                weighted_diff = abs(rel_aa_comp(''.join(aa_helix), feature) - (ideal_neg[key] * feature_neg[key]))
+                WT_weight[key] = weighted_diff
             sum_dev += weighted_diff
 
     if sum_only == True:

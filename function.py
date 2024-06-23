@@ -293,11 +293,8 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
 
     # Calculate atom features
     Salt_bridge = salt_bridge(input_path, pdb_file)
-    print('Salt_bridge finished')
     H_bond = H_bond_calc(output_path, pqr_file)
-    print('H_bond finished')
     VdW_clust, VdW_vol = VdW_interaction(input_path, pdb_file, by_atom = True)
-    print('VdW_interaction finished')
     
     # extract the values for the proteins from the dictionary and delete atoms that dont have a feature (if applicable)
     Salt_bridge = remove_nan(Salt_bridge[prot_name])
