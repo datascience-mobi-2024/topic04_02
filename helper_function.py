@@ -81,3 +81,12 @@ def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect
     H_id[1:,0] = d_DH[:,1,0]
     angle = np.dstack((angle, H_id))
     return angle
+
+def remove_nan(array):
+    import numpy as np
+    rows_with_nan = np.insert(np.array([np.all(np.isnan(array[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
+    cols_with_nan = np.insert(np.array([np.all(np.isnan(array[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
+    array = array[~rows_with_nan, :] #delete rows with all nan values
+    array = array[:, ~cols_with_nan] #delete columns with all nan values
+    array[:,0] = array[:,0].astype('int')
+    return array
