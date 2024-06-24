@@ -131,6 +131,228 @@ non_conservative_substitutions = {
         'W': ['G'],
         }
 
+AA_polar_neutral:list = ['N', 'Q', 'S', 'T', 'Y']
+
+def rel_aa_comp(Sequence:str, AA_property): 
+    count = 0
+    for n in AA_property:
+        for i in Sequence:  
+            if n ==i:
+                count += 1
+    return count/len(Sequence)
+
+#Clusters atoms if they are within a set distance
+def cluster_calc(array, by_atom=False):
+    Cluster ={}
+    from scipy.sparse.csgraph import connected_components
+    from scipy.sparse import lil_matrix
+    adjacency_matrix = lil_matrix((int(len(array)), int(len(array))))
+    for i in range(len(array)):
+        adjacency_matrix[0,i] = array[0,i]
+        adjacency_matrix[i,0] = array[i,0]
+    for i in range(1, len(array)):
+        for j in range(i+1, len(array)):
+            overlap_volume = array[i, j]
+            adjacency_matrix[i, j] = overlap_volume
+
+    adjacency_matrix = adjacency_matrix.tocsr()
+    labels, n_components = connected_components(adjacency_matrix[1:,1:])
+
+    set_components = set(n_components) #unique number of clusters
+    list_components = n_components.tolist()
+
+  
+    for i in range(len(set_components)):
+        atom_number = []
+        for n in range(len(list_components)):
+            if list_components[n] == i:
+                atom_number.append(adjacency_matrix[list_components[0], n + 1])
+                Cluster[f'Cluster {str(i)}'] = atom_number
+    if by_atom:
+        clust_inv = {}
+        for cluster_name, atom_list in Cluster.items():
+            for atom_number in atom_list:
+                clust_inv[atom_number] = cluster_name
+        return clust_inv
+    else:
+        return Cluster
+
+#Calculates the volume of intersection between two spheres
+def intersect_vol(array, r1:str, r2:str, dis = None):   
+    import numpy as np
+    r1 = float(r1)
+    r2 = float(r2)
+    vol = array
+    if dis is not None:
+        d = dis
+    else:
+        d = array[1:,1:]
+    vol[1:,1:] = (np.pi*(r2+r1-d)**2 * (d**2 + 2*d*r1 - 3*r1**2 + 2*d*r2 + 6*r1*r2 - 3*r2**2))/(12*d)
+    return vol
+
+#Calculates distance based on two arrays, with set cutoff as a maximum distance allowed
+def distance (array1, array2, cutoff = None, remove_nan=True):
+    from scipy.spatial.distance import cdist
+    import numpy as np
+    distance = cdist(array1[:,1:], array2[:,1:], metric='euclidean') #calculate distance
+    distance = np.concatenate((np.array([array1[:,0]]).T, distance), axis=1) #add atom number from  array1
+    distance = np.concatenate(((np.insert(np.array([array2[:,0]]), 0, None).reshape(-1,1)).T, distance), axis=0) #add atom number from array1
+    if cutoff is not None:
+        distance[1:, 1:][distance[1:, 1:] >= cutoff] = np.nan #set distance > cutoff to nan
+        
+    if remove_nan == False:
+        return distance
+    elif remove_nan == True:
+        rows_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
+        cols_with_nan = np.insert(np.array([np.all(np.isnan(distance[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
+        distance = distance[~rows_with_nan, :] #delete rows with all nan values
+        distance = distance[:, ~cols_with_nan] #delete columns with all nan values
+        distance[:,0] = distance[:,0].astype('int')
+        return distance
+    else:
+        raise ValueError('remove_nan must be either True or False')
+        
+def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub
+    from function_mut import distance
+    import numpy as np
+    d_DH = np.full((0,2,2), fill_value = np.nan)
+    for n in range(len(Donor_array)):
+        DH_temp = distance(np.array([Donor_array[n,:]]), np.array([H_array[n,:]]))
+        d_DH = np.concatenate((d_DH, DH_temp.reshape((1,) + DH_temp.shape)), axis=0)
+    d_HA = distance(H_array, Acceptor_array, cutoff = 3.5,remove_nan=False)
+    d_DA = distance(Donor_array, Acceptor_array, remove_nan=False)
+    angle = np.full((d_DA.shape[0], d_DA.shape[1]), fill_value = np.nan)
+    angle[0,:] = d_DA[0,:].T
+    for n in range(d_DH.shape[0]):
+            theta = np.arccos((d_DH[n,1,1]**2 + d_HA[n,1:]**2 - d_DA[1:,1:][n,:]**2)/(2*d_DH[n,1,1]*d_HA[1:,1:][n,:]))
+            theta[(theta < 100* np.pi/180) | (theta > np.pi)] = np.nan
+            angle[n,0] = d_DA[n,0]
+            angle[1:,1:][n,:] = theta 
+    H_id = np.full((angle.shape[0], angle.shape[1]), fill_value = np.nan)
+    H_id[1:,0] = d_DH[:,1,0]
+    angle = np.dstack((angle, H_id))
+    return angle
+
+def remove_nan(array):
+    import numpy as np
+    rows_with_nan = np.insert(np.array([np.all(np.isnan(array[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
+    cols_with_nan = np.insert(np.array([np.all(np.isnan(array[1:, 1:]), axis=0)]),0, None) #find columns with all nan values
+    array = array[~rows_with_nan, :] #delete rows with all nan values
+    array = array[:, ~cols_with_nan] #delete columns with all nan values
+    array[:,0] = array[:,0].astype('int')
+    return array
+
+def pdb2AA(path, file_name, list_output=True):
+    """
+    Extracts the amino acid sequence from a PDB file.
+    
+    Args:
+        path (str): Path to the directory containing the PDB file.
+        file_name (str): Filename of the PDB file.
+
+    Returns:
+        list: A list containing the 1-letter amino acid sequence from the PDB file.
+    """
+    import os
+    AA_dict = {
+        "ALA": "A",
+        "CYS": "C",
+        "ASP": "D",
+        "GLU": "E",
+        "PHE": "F",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LYS": "K",
+        "LEU": "L",
+        "MET": "M",
+        "ASN": "N",
+        "PRO": "P",
+        "GLN": "Q",
+        "ARG": "R",
+        "SER": "S",
+        "THR": "T",
+        "VAL": "V",
+        "TRP": "W",
+        "TYR": "Y",
+        "SEC": "U",
+        "PYL": "O",
+    }
+    
+    #extract aminoacid list
+    with open(os.path.join(path, file_name), 'r') as f:
+        ## path.join(path, file_name)
+        import re
+        aa1 = []
+        aa_count = 1
+        for line in f:
+            line = line.replace('-', '  -')
+            line = re.sub(r'([A])(\d)', r'\1 \2', line)
+            if line.startswith('ATOM'):
+                number = int(line.split()[5])
+                aa = str(line.split()[3])
+                if number == 1 and AA_dict[aa] not in aa1:
+                    aa1.append(AA_dict[aa])
+                if number == aa_count and len(aa1)+1 == number:
+                    aa1.append(AA_dict[aa])
+                aa_count = number
+    if list_output:
+        return aa1
+    else:
+        AA_string = ''.join(aa1)
+        return AA_string
+
+def AAA2A(AA:list, str=True):
+    AA_dict = {
+        "ALA": "A",
+        "CYS": "C",
+        "ASP": "D",
+        "GLU": "E",
+        "PHE": "F",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LYS": "K",
+        "LEU": "L",
+        "MET": "M",
+        "ASN": "N",
+        "PRO": "P",
+        "GLN": "Q",
+        "ARG": "R",
+        "SER": "S",
+        "THR": "T",
+        "VAL": "V",
+        "TRP": "W",
+        "TYR": "Y",
+        "SEC": "U",
+        "PYL": "O",
+        }
+    for n in range(len(AA)):
+        AA[n] = AA_dict[AA[n]]
+    if str:
+        return "".join(AA)
+    else:
+        return AA
+    
+def ArraySlice (Array, possible_mutations):
+    import numpy as np
+    free_AA = Array
+    index_list = [i.split('-')[1] for i in possible_mutations]
+    mask = ~np.isin(Array, index_list)
+    mask = np.all(mask, axis=1)
+    filtered_AA = free_AA[mask]
+    return filtered_AA
+
+def fasparse(faspath):
+    import numpy as np
+    helixl = []
+    sheetl = []
+    data = np.loadtxt(faspath, dtype={'names': ('index', 'col1', 'col2', 'val1', 'val2', 'val3'),'formats': ('i4', 'S1', 'S1', 'f4', 'f4', 'f4')})
+    indiceshelix = data['index'][data['col2'] == b'H']
+    indicessheet = data['index'][data['col2'] == b'E']
+    helix = np.split(indiceshelix, np.where(np.diff(indiceshelix) != 1)[0]+1)
+    sheet = np.split(indicessheet, np.where(np.diff(indicessheet) != 1)[0]+1)
+    return [helix, sheet]
 
 def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:dict, sec_prediction, sort = True, sum_only = False):
     """
@@ -150,7 +372,7 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
             - sorted_keys (list, optional): If sort=True, a list of features sorted by their weighted deviation (highest first).
                 - WT_weight (dict, optional): If sort=False, a dictionary containing the weighted deviation for each feature.
     """
-    from function import rel_aa_comp
+    from function_mut import rel_aa_comp
     import operator
 
     AA_polar = 'NQSTY'
@@ -303,11 +525,11 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     """
     
     #import necessary functions
-    from function import salt_bridge
-    from function import H_bond_calc
-    from function import VdW_interaction
-    from function import pdb2pqr
-    from helper_function import remove_nan
+    from function_mut import salt_bridge
+    from function_mut import H_bond_calc
+    from function_mut import VdW_interaction
+    from function_mut import pdb2pqr
+    from function_mut import remove_nan
     import os
     import numpy as np
     import pandas as pd
@@ -377,7 +599,6 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     else:
         return Protein_array
 
-########################### Used for 3D structure analysis ###########################
 def SASA_calc(path, pdb_files=None):
     from Bio.PDB import PDBParser
     from Bio.PDB.SASA import ShrakeRupley
@@ -405,8 +626,7 @@ def pdb2pqr(input_path, output_path,pdb_files=None):
         name = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
         os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
 
-#https://www.bioinformation.net/003/002800032008.pdf
-def salt_bridge(path, pdb_files=None):
+def salt_bridge(path, pdb_files=None): #https://www.bioinformation.net/003/002800032008.pdf
     import numpy as np
     import os
     import scipy
@@ -502,8 +722,8 @@ def H_bond_calc(path, pqr_files=None):
     import os
     import scipy
     from scipy.spatial.distance import cdist
-    from helper_function import distance
-    from helper_function import angle_calc
+    from function_mut import distance
+    from function_mut import angle_calc
     
     Donor_dict = {'GLN': [('NE2', 'HE21'), ('NE2', 'HE22')], 
                 'GLU': [('OE2', 'HE2')], 
@@ -574,7 +794,7 @@ def H_bond_calc(path, pqr_files=None):
                                             
 def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
     import os
-    from helper_function import fasparse
+    from function_mut import fasparse
     os.getcwd()
     # call s4pred and create fas file
     fastapath = os.path.join(output_path,f'{prot}.fasta')
@@ -678,10 +898,10 @@ def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:d
     """
     
     import itertools
-    from function import rel_aa_comp
+    from function_mut import rel_aa_comp
     from function_mut import mut_apply
     from function_mut import mut_live_test
-    from Aminoacid_lists import AA_polar_neutral
+    from function_mut import AA_polar_neutral
     
     pos_corr_list = list(pos_corr.keys())
     neg_corr_list = list(neg_corr.keys())
@@ -1015,7 +1235,7 @@ def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, see
         
     return Possible_subst
 
-def prot_mut(pdb_path, pdb_file, pqr_output_path, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 1000, seed = 0):
+def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 1000, seed = 0):
     """
     This function performs protein mutation analysis to improve the thermal stability of a protein, with minimal changes to the structure
     (as measured by melting point). It takes a PDB file path, filename, and path for PQR output as input.
@@ -1024,6 +1244,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, Deep_mut=True, iterations=100,
         pdb_path (str): Path where the pdb file is stored.
         pdb_file (str): Name of the PDB file.
         pqr_output_path (str): Path where pqr file will be saved (also fasta and fas).
+        locked_aa_pos (list, optional): List of amino acid positions that should not be mutated (defaults to None).
         Deep_mut (bool, optional): Flag whether to include random mutation in screening
             (random + rational, defaults to True).
         iterations (int, optional): Number of iterations for rational improvement (defaults to 100).
@@ -1049,13 +1270,12 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, Deep_mut=True, iterations=100,
     from function_mut import functional_aa
     from function_mut import free_aa
     from function_mut import Subst_reducer
+    from function_mut import pdb2AA
+    from function_mut import ArraySlice
     from function_mut import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, conserv_subst, non_conservative_substitutions
-    
+
     from SPARC import SPARC
     
-    from helper_function import pdb2AA
-    from helper_function import ArraySlice
-
     from heapq import heappop, heappush
     import heapq    
    
@@ -1066,6 +1286,11 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, Deep_mut=True, iterations=100,
     aa_free = free_aa(pdb_path, pdb_file, aa_locked)
     aa_str = ''.join(aa_list)
     free_AA_dict = {a: b for a, b in zip(aa_free[:,2], aa_free[:,1] )} # create dictionary from array the key is the absolute aminoacid position and value is the aminoacid
+    
+    if locked_aa_pos is not None:
+        for pos in locked_aa_pos:
+            free_AA_dict.pop(pos)
+    
     sec_prediction = AA2s4pred('./data/s4pred', pqr_output_path, aa_str, pdb_file)
     possible_substitutions = Subst_reducer(sec_prediction, conserv_subst, free_AA_dict, seed = seed)
 
@@ -1201,9 +1426,10 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, Deep_mut=True, iterations=100,
 def mutation_decreaser(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False):
     from function_mut import diff_weighted
     from function_mut import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value
+    from function_mut import AA2s4pred
     from SPARC import SPARC
     from heapq import heappop, heappush, nlargest, heapify
-    from function import AA2s4pred
+
     import os
     #diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:dict, sec_prediction, sort = True, sum_only = False):
     #define variables for iteration
