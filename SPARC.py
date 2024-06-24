@@ -15,8 +15,8 @@ def SPARC(data:str, name, datapath, directoryS4):
     """
     data: string, protein sequence
     name: arbitrary name for the protein
-    datapath: string, path to data directory, only "/" allowed
-    directoryS4: string, compltete path to directory of S4pred, only "/" allowed
+    datapath: string, path to data directory
+    directoryS4: string, complete path to directory of S4pred
     """
     import joblib
     import numpy as np
@@ -24,12 +24,13 @@ def SPARC(data:str, name, datapath, directoryS4):
     import os
     from sklearn.preprocessing import StandardScaler
     from sklearn.decomposition import PCA
-    from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+    from sklearn.ensemble import  GradientBoostingRegressor
     from sklearn.metrics import mean_squared_error, r2_score
     model1 = joblib.load('./data/gbr_model1.joblib')
     scaler1 = joblib.load('./data/scaler1.joblib')
     pca1 = joblib.load('./data/pca1.joblib')
     prokaryotes1 = joblib.load('./data/prokaryotes1.joblib')
+    data = data.upper()
     features = pd.Series(np.zeros(prokaryotes1.shape[1]-1))
     features.index = prokaryotes1.drop(columns='meltPoint').columns
     with open(os.path.join(datapath,f'{name}.fasta'), "w") as fasta_file:
@@ -40,12 +41,12 @@ def SPARC(data:str, name, datapath, directoryS4):
     os.system(f'python3 run_model.py "{fastapath}" > "{faspath}"')
     os.chdir('../../')
     Protlen = len(data)
-    features.iloc[0] = Protlen
-    HelixSparc = fasparse(faspath)[0]
-    SheetSparc = fasparse(faspath)[1]
+    features.iloc[0] = Protlen  #length
+    HelixSparc = fasparse(faspath)[0]   #parse s4pred output for helices
+    SheetSparc = fasparse(faspath)[1]   #parse s4pred output for sheets
     features.iloc[1] = len(HelixSparc)  #counts
     features.iloc[2] = len(SheetSparc)
-    helixind = np.concatenate(HelixSparc)-1
+    helixind = np.concatenate(HelixSparc)-1         
     helixseq = np.array(list(data))[list(helixind)]
     sheetind = np.concatenate(SheetSparc)-1
     sheetseq = np.array(list(data))[list(sheetind)]
@@ -53,7 +54,7 @@ def SPARC(data:str, name, datapath, directoryS4):
     features.iloc[4] = len(sheetind) / Protlen
     features.iloc[5] = np.mean(np.array([len(arr) for arr in HelixSparc])) #avg lengths
     features.iloc[6] = np.mean(np.array([len(arr) for arr in SheetSparc]))
-    features.iloc[7] = features.iloc[3] + features.iloc[4]
+    features.iloc[7] = features.iloc[3] + features.iloc[4]      #combined percentage of helices and sheets in protein
     aapairs = features.index[8:87]
     for aa in aapairs:
         features[aa] = (data.count(aa[0]) + data.count(aa[1])) / Protlen
