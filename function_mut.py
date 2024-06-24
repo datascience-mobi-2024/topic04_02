@@ -631,6 +631,7 @@ def salt_bridge(path, pdb_files=None): #https://www.bioinformation.net/003/00280
     import os
     import scipy
     from scipy.spatial.distance import cdist
+    from function_mut import distance
     import re
     
     if pdb_files is None:
@@ -657,7 +658,6 @@ def salt_bridge(path, pdb_files=None): #https://www.bioinformation.net/003/00280
                         line_array = line_array.astype('float64')
                         Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
 
-            from helper_function import distance
             Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
     return Salt_bridges
 
@@ -667,6 +667,10 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
     import scipy
     from scipy.spatial.distance import cdist
     import re
+    
+    from function_mut import distance
+    from function_mut import cluster_calc
+    from function_mut import intersect_vol
     
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
@@ -703,14 +707,11 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
                         elif 'O' in line[12:17]:
                             X_array = np.append(X_array, int('2'))
             
-            from helper_function import distance
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             
-            from helper_function import cluster_calc
             Atom_distance = np.nan_to_num(Atom_distance)
             VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance, by_atom)
             
-            from helper_function import intersect_vol
             Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
             Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
             VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
@@ -784,9 +785,6 @@ def H_bond_calc(path, pqr_files=None):
                         aa_cache = []
                         atom_cache = [] 
 
-            
-        from helper_function import distance
-        from helper_function import angle_calc
         angle = angle_calc(Donor_array, H_array, Acceptor_array)
         HB_dict[str(pqr_file).split('.')[0]] = angle
 
