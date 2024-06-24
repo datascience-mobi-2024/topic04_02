@@ -194,6 +194,10 @@ def intersect_vol(array, r1:str, r2:str, dis = None):
 def distance (array1, array2, cutoff = None, remove_nan=True):
     from scipy.spatial.distance import cdist
     import numpy as np
+    import warnings
+    
+    warnings.filterwarnings("ignore", category = RuntimeWarning)
+    
     distance = cdist(array1[:,1:], array2[:,1:], metric='euclidean') #calculate distance
     distance = np.concatenate((np.array([array1[:,0]]).T, distance), axis=1) #add atom number from  array1
     distance = np.concatenate(((np.insert(np.array([array2[:,0]]), 0, None).reshape(-1,1)).T, distance), axis=0) #add atom number from array1
@@ -215,6 +219,10 @@ def distance (array1, array2, cutoff = None, remove_nan=True):
 def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub
     from function_mut import distance
     import numpy as np
+    import warnings
+    
+    warnings.filterwarnings("ignore", category = RuntimeWarning)
+    
     d_DH = np.full((0,2,2), fill_value = np.nan)
     for n in range(len(Donor_array)):
         DH_temp = distance(np.array([Donor_array[n,:]]), np.array([H_array[n,:]]))
@@ -801,11 +809,10 @@ def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
     abs_fas = os.path.abspath(faspath)
 
     if os.path.isfile(fastapath):
-        print(f'fasta file already exists {fastapath}')
+        print(f'fasta file already exists')
     else:
         with open(os.path.join(output_path,f'{prot}.fasta'), "w") as fasta_file:
             fasta_file.write(f">{prot}\n{AA_seq}\n")
-        print(f'fasta file created {fastapath}')
         
     if os.path.isfile(faspath):
         print('fas file already exists')
@@ -813,7 +820,6 @@ def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
         os.chdir(directory_S4pred)
         os.system(f'python3 run_model.py "{abs_fasta}" > "{abs_fas}"')
         os.chdir('../../')
-        print('fas file created')
      
     #read fas file and   
     sec_pred = fasparse(abs_fas)    
@@ -1260,8 +1266,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     """
     #import functions
 
-    from function import AA2s4pred
-     
+    from function_mut import AA2s4pred
     from function_mut import diff_weighted
     from function_mut import mutator_rand
     from function_mut import mutator_rational
