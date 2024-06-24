@@ -132,7 +132,6 @@ non_conservative_substitutions = {
         }
 
 
-
 def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:dict, sec_prediction, sort = True, sum_only = False):
     """
     Calculates the weighted sum of deviations for a given amino acid ('aa') based on positive and negative features.
@@ -220,8 +219,6 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
         return sum_dev, sorted_keys
     else:
         return sum_dev, WT_weight #sum_dev is a positive value of all deviations, higher values indicate a worse fit
-    
-    
 
 def mut_apply(AA_list, Mut_list):
     """
@@ -259,9 +256,6 @@ def mut_live_test (AA_list, Mut_list, pos_corr, neg_corr, ideal_pos_value, ideal
     # if Diff is negative the mutation is not beneficial
     return Diff #The higher the difference the better the mutation
     
-
-
-
 def mutator_rand(AAs_list, substitutions, threshhold = 100, seed = 0):
     from itertools import product
     import random
@@ -290,8 +284,380 @@ def mutator_rand(AAs_list, substitutions, threshhold = 100, seed = 0):
             
             if count >= threshhold:
                 break
+                    
+def functional_aa(input_path, pdb_file, output_path, df=False):
+    """
+    This function selects atoms involved in various interactions (salt bridges, hydrogen bonds, 
+    and van der Waals interactions) from a protein structure.
+
+    Args:
+        input_path (str): Path to the directory containing the protein structure file.
+        pdb_file (str): Filename of the protein structure file in PDB format.
+        output_path (str): Path to the directory where the output PQR file will be saved.
+        df (bool, optional): If True, returns a pandas DataFrame containing the information. 
+                                Defaults to False (returns a NumPy array).
+
+    Returns:
+        np.ndarray | pd.DataFrame: A NumPy array containing the selected atom information 
+                                   or a pandas DataFrame if `df` is True.
+    """
+    
+    #import necessary functions
+    from function import salt_bridge
+    from function import H_bond_calc
+    from function import VdW_interaction
+    from function import pdb2pqr
+    from helper_function import remove_nan
+    import os
+    import numpy as np
+    import pandas as pd
+    import re
+    
+    # get protein name and pqr file name
+    prot_name = pdb_file.split('-')[1]
+    
+    #create pqr file
+    pqr_file = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+
+    if os.path.isfile(os.path.join(output_path, f'{(pdb_file.split(".")[0]).split("-")[1]}.pqr')):
+        print('Pqr file already exists')
+    else:    
+        pdb2pqr(input_path, output_path, pdb_file)
+
+    # Calculate atom features
+    Salt_bridge = salt_bridge(input_path, pdb_file)
+    H_bond = H_bond_calc(output_path, pqr_file)
+    VdW_clust, VdW_vol = VdW_interaction(input_path, pdb_file, by_atom = True)
+    
+    # extract the values for the proteins from the dictionary and delete atoms that dont have a feature (if applicable)
+    Salt_bridge = remove_nan(Salt_bridge[prot_name])
+    H_bond = remove_nan(H_bond[prot_name][:,:,0])
+
+    VdW_clust = VdW_clust[prot_name]
+
+    #create lists with all aminoacid that are part of a feature
+    atom_S =list(Salt_bridge[0,1:])
+    atom_HA = list(H_bond[0,1:])
+    atom_HD = list(H_bond[1:,0])
+
+    # creates an atom_dict that contains the atom number and the feature it is part of
+    atom_dict = {}
+    for lst, identifier in [(atom_S, "Salt_bridge"), (atom_HA, "Hbond_acc"), (atom_HD, "Hbond_don")]:
+        for atom_number in lst:
+            if atom_number in atom_dict:
+                atom_dict[atom_number] = [atom_dict[atom_number], identifier]
+            else:
+                atom_dict[atom_number] = identifier
+    # Add van der Waals interaction information to the dictionary
+    for k,v in VdW_clust.items():
+        if k in atom_dict:
+            atom_dict[k] = [atom_dict[k], v]
+        else: atom_dict[k] = v
+    atom_sorted = {k: atom_dict[k] for k in sorted(atom_dict)}
+
+    # create a dataframe with the atom number and the feature it is part of
+    prot_df = pd.DataFrame(columns = ['Protein','Aminoacid','Aminoacid_number', 'Atom_number', 'Feature'])
+    Protein_array = np.empty((0, 5))
+    with open (os.path.join(output_path, pqr_file)) as f:
+        prot_df_list = []
+        for line in f:
+            #line = line.replace('-', '  -')
+            #line = re.sub(r'([A])(\d)', r'\1 \2', line)
+            if line.startswith('ATOM'):
+                atom_number = int(line.split()[1])
+                feature = atom_sorted.get(atom_number)
+                if atom_number in atom_sorted.keys():
+                    atom_line = np.array([[str(prot_name),str(line.split()[3]), int(line.split()[4]),int(line.split()[1]), str(feature)]])
+                    Protein_array = np.append(Protein_array, atom_line, axis=0)
+                    
+    # return the dataframe if df is True
+    if df:
+        Prot_df = pd.DataFrame(Protein_array, columns = ['Protein','Aminoacid','Aminoacid_number', 'Atom_number', 'Feature'])
+        return Prot_df
+    else:
+        return Protein_array
+
+########################### Used for 3D structure analysis ###########################
+def SASA_calc(path, pdb_files=None):
+    from Bio.PDB import PDBParser
+    from Bio.PDB.SASA import ShrakeRupley
+    import os
+    SASA_dict = {}
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    for pdb_file in pdb_files:
+        struct = PDBParser(QUIET=1).get_structure(pdb_file.split('-')[1], os.path.join(path, str(pdb_file)))
+        ShrakeRupley().compute(struct, level = 'S')
+        SASA_dict[pdb_file.split('-')[1]] = struct.sasa
+    return SASA_dict
+
+def pdb2pqr(input_path, output_path,pdb_files=None):
+#INFO:Please cite:  Jurrus E, et al.  Improvements to the APBS biomolecular solvation software suite.  Protein Sci 27 112-128 (2018).
+#INFO:Please cite:  Dolinsky TJ, et al.  PDB2PQR: expanding and upgrading automated preparation of biomolecular structures for molecular simulations. Nucleic Acids Res 35 W522-W525 (2007).
+    import os
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(input_path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    for pdb_file in pdb_files:
+        name = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+        os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
+
+#https://www.bioinformation.net/003/002800032008.pdf
+def salt_bridge(path, pdb_files=None):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    import re
+    
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    Salt_bridges = dict()
+    
+    for pdb_file in pdb_files:
+        Asp_Glu_array = np.empty((0, 4))
+        Lys_Arg_His_array = np.empty((0, 4))
+        
+        with open(os.path.join(path, str(pdb_file))) as f:
+            for line in f:
+                #line = line.replace('-', '  -')
+               #line = re.sub(r'([A])(\d)', r'\1 \2', line)
+                if line.startswith('ATOM'):
+                    if ('ASP' in line and 'OD' in line) or ('GLU' in line and 'OE' in line):
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = line_array.astype('float64')
+                        Asp_Glu_array = np.append(Asp_Glu_array, line_array, axis = 0)
+                    if ('LYS' in line and 'NZ' in line) or ('ARG' in line and 'NH' in line) or ('HIS' in line and 'NE' in line) or ('HIS' in line and 'ND' in line):
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = line_array.astype('float64')
+                        Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
+
+            from helper_function import distance
+            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
+    return Salt_bridges
+
+def VdW_interaction(path, pdb_files=None, by_atom = False):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    import re
+    
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    VdW_cluster = {}
+    VdW_volume = {}
+
+    for pdb_file in pdb_files:
+        with open(os.path.join(path, str(pdb_file))) as f:
+            Atom_array = np.empty((0, 4))
+            #VdW_radii = {'C': 3.1, 'N': 2.95, 'O': 2.96} # Van der Waals radii in Angstrom enlarged by watermolecule radius 1.4 A (https://academic.oup.com/nar/article/49/W1/W559/6279848#267025710)
+            #C_C = 6.2
+            #C_N = 6.05
+            #C_O = 6.06
+            #N_N = 5.9
+            #N_O = 5.91
+            #O_O = 5.92
+            X_array = np.array([[]])
+            Atom_list = ['C', 'N', 'O']
+            for line in f:
+                #line = line.replace('-', '  -')
+                #line = re.sub(r'([A])(\d)', r'\1 \2', line)
+                line = line.strip()
+                if line.startswith('ATOM'):
+                    if ('LEU' in line and line[12:17].strip() in Atom_list) or ('VAL' in line and line[12:17].strip() in Atom_list) or ('ILE' in line and line[12:17].strip() in Atom_list):
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = line_array.astype('float64')
+                        Atom_array = np.append(Atom_array, line_array, axis = 0)
+                        if 'C' in line[12:17]:
+                            X_array = np.append(X_array, int('0'))
+                        elif 'N' in line[12:17]:
+                            X_array = np.append(X_array, int('1'))
+                        elif 'O' in line[12:17]:
+                            X_array = np.append(X_array, int('2'))
             
+            from helper_function import distance
+            Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             
+            from helper_function import cluster_calc
+            Atom_distance = np.nan_to_num(Atom_distance)
+            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance, by_atom)
+            
+            from helper_function import intersect_vol
+            Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
+            Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
+            VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
+            
+    return VdW_cluster, VdW_volume
+                
+def H_bond_calc(path, pqr_files=None):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    from helper_function import distance
+    from helper_function import angle_calc
+    
+    Donor_dict = {'GLN': [('NE2', 'HE21'), ('NE2', 'HE22')], 
+                'GLU': [('OE2', 'HE2')], 
+                'ASP': [('OD2', 'HD2')], 
+                'ASN': [('ND2', 'HD21'), ('ND2', 'HD22')], 
+                'HIS': [('NE2', 'HE2'), ('ND1', 'HD2')], 
+                'LYS': [('NZ', 'HZ1'), ('NZ', 'HZ2'), ('NZ', 'HZ3')], 
+                'ARG': [('NE', 'HE'), ('NH1', 'HH11'), ('NH1', 'HH12'), ('NH2', 'HH21'), ('NH2', 'HH22')], 
+                'SER': [('OG', 'HG')], 
+                'THR': [('OG1', 'HG1')], 
+                'TRP': [('NE1', 'HE1')], 
+                'TYR': [('OH', 'HH')]}
+
+    Acceptor_dict = {'GLN': [('OE1')], 
+                'ASP': [('OD1'), ('OD2')], 
+                'ASN': ['OD1'], 
+                'GLU': [('OE1'), ('OE2')], 
+                'SER': ['OG'], 
+                'THR': ['OG1']}
+    HB_dict = {}
+    if pqr_files is None:
+        pqr_files = [f for f in os.listdir(path) if f.endswith('.pqr')]
+    if isinstance(pqr_files, str):
+        pqr_files = [pqr_files]
+    for pqr_file in pqr_files:
+        with open(os.path.join(path, str(pqr_file))) as f:
+            Donor_array = np.empty((0, 4))
+            H_array = np.empty((0, 4))
+            Acceptor_array = np.empty((0, 4))
+            aa_cache = []
+            atom_cache = []
+            for line in f:
+                line = line.replace('-', '  -')
+                if line.startswith('ATOM'):
+                    if not aa_cache:
+                        aa_cache.append(line.split()[3])
+                        aa_cache.append(line.split()[4])
+                        atom_cache.append(line)
+                    elif aa_cache[1] == line.split()[4]:
+                        atom_cache.append(line)
+                    elif aa_cache[1] != line.split()[4]:
+                        if aa_cache[0] in Donor_dict.keys():
+                            sub_donor = Donor_dict[aa_cache[0]] #extracts list (with tupels of Donor, Hydrogen) for the amino acid
+                            for n in sub_donor:
+                                donor_match = [entry for entry in atom_cache if n[0] in entry]
+                                h_match = [entry for entry in atom_cache if n[1] in entry]
+                                if donor_match and h_match:
+                                    d_line = np.array([[int(donor_match[0].split()[1]), float(donor_match[0].split()[5]), float(donor_match[0].split()[6]), float(donor_match[0].split()[7])]]) 
+                                    h_line = np.array([[int(h_match[0].split()[1]), float(h_match[0].split()[5]), float(h_match[0].split()[6]), float(h_match[0].split()[7])]])
+                                    Donor_array = np.append(Donor_array, d_line, axis=0)
+                                    H_array = np.append(H_array, h_line, axis=0)
+                        if aa_cache[0] in Acceptor_dict.keys():
+                            sub_acc = Acceptor_dict[aa_cache[0]] #extracts list of acceptors for the amino acid
+                            for n in sub_acc:
+                                acc_match = [entry for entry in atom_cache if n in entry]               
+                                a_line = np.array([[int(acc_match[0].split()[1]), float(acc_match[0].split()[5]), float(acc_match[0].split()[6]), float(acc_match[0].split()[7])]])
+                                Acceptor_array = np.append(Acceptor_array, a_line, axis=0)
+                        aa_cache = []
+                        atom_cache = [] 
+
+            
+        from helper_function import distance
+        from helper_function import angle_calc
+        angle = angle_calc(Donor_array, H_array, Acceptor_array)
+        HB_dict[str(pqr_file).split('.')[0]] = angle
+
+    return HB_dict
+                                            
+def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
+    import os
+    from helper_function import fasparse
+    os.getcwd()
+    # call s4pred and create fas file
+    fastapath = os.path.join(output_path,f'{prot}.fasta')
+    faspath = os.path.join(output_path,f'{prot}.fas')
+    abs_fasta = os.path.abspath(fastapath)
+    abs_fas = os.path.abspath(faspath)
+
+    if os.path.isfile(fastapath):
+        print(f'fasta file already exists {fastapath}')
+    else:
+        with open(os.path.join(output_path,f'{prot}.fasta'), "w") as fasta_file:
+            fasta_file.write(f">{prot}\n{AA_seq}\n")
+        print(f'fasta file created {fastapath}')
+        
+    if os.path.isfile(faspath):
+        print('fas file already exists')
+    else:
+        os.chdir(directory_S4pred)
+        os.system(f'python3 run_model.py "{abs_fasta}" > "{abs_fas}"')
+        os.chdir('../../')
+        print('fas file created')
+     
+    #read fas file and   
+    sec_pred = fasparse(abs_fas)    
+
+    return sec_pred 
+
+def free_aa (path, pdb_file, functional_aa):
+    """
+    Identifies and collects free amino acids from a PDB file.
+
+    This function takes a path to a PQR file, the filename of the PQR file, and a NumPy array containing protein information as input.
+    It iterates through the PQR file and identifies residues that are not involved in Salt bridges, Hydrogen bonds, and Van der Waals interactions.
+
+    Args:
+        path (str): Path to the directory containing the PQR file.
+        pqr_file (str): Filename of the PQR file.
+        prot_arr (np.ndarray): NumPy array containing protein information (assumed to have residue types in the 2nd column).
+
+    Returns:
+        np.ndarray: A NumPy array containing information about free amino acids (protein name, residue name, residue number).
+    """
+       
+    import os
+    import numpy as np
+    import re
+    AA_dict = {
+        "ALA": "A",
+        "CYS": "C",
+        "ASP": "D",
+        "GLU": "E",
+        "PHE": "F",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LYS": "K",
+        "LEU": "L",
+        "MET": "M",
+        "ASN": "N",
+        "PRO": "P",
+        "GLN": "Q",
+        "ARG": "R",
+        "SER": "S",
+        "THR": "T",
+        "VAL": "V",
+        "TRP": "W",
+        "TYR": "Y",
+        "SEC": "U",
+        "PYL": "O",
+    }
+    functional_aa = sorted(set(functional_aa[:,2]))
+    free_aa = np.empty((0, 3))
+    prot_name = pdb_file.split('-')[1]
+    with open(os.path.join(path, str(pdb_file))) as f:
+        for line in f:
+            line = line.replace('-', '  -')
+            line = re.sub(r'([A])(\d)', r'\1 \2', line)
+            if line.startswith('ATOM'):
+                aa_number = line.split()[5]
+                if aa_number not in functional_aa and aa_number not in free_aa[:,2]:
+                    aa_line = np.array([[str(prot_name), AA_dict[line.split()[3]], line.split()[5]]])
+                    free_aa = np.append(free_aa, aa_line, axis=0)
+    return free_aa                
 
 def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:dict, conserv_substitution, ideal_pos_value, ideal_neg_value, cutoff, sec_prediction):
     """
@@ -605,3 +971,272 @@ def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:d
 
                              
     return AA_mut_list, mut_list
+
+def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, seed):
+    """
+    Reduces the possible substitutions for each amino acid based on secondary structure predictions.
+
+    Args:
+        sec_pred: A list of length 2 containing secondary structure predictions for each position in the sequence.
+          - sec_pred[0]: List of characters representing helix ('H') or coil ('-') predictions for each position.
+          - sec_pred[1]: List of characters representing sheet ('E') or coil ('-') predictions for each position.
+        conserv_subst_dict: A dictionary where keys are amino acids and values are lists of their conservative substitutions.
+        free_AA_dict: A dictionary where keys are amino acid position (in protein) and value is aminoacid.
+
+    Returns:
+        A dictionary where keys are amino acids and values are reduced lists of possible substitutions based on secondary structure predictions.
+    """
+    import random
+    
+    random.seed(seed)
+    
+    helix_forming = ['E', 'A', 'L', 'M', 'Q', 'K', 'R', 'H', 'I', 'W', 'F']
+    sheet_forming = ['L', 'M', 'V', 'I', 'Y', 'C', 'W', 'F', 'T', 'U']
+    
+    #helixvalues = {'E':1.59,'A':1.41,'L':1.34,'M':1.3,'Q':1.27,'K':1.23,'R':1.21,'H':1.05,'V':0.9,'I':1.09,'Y':0.74,'C':0.66,'W':1.02,'F':1.16,'T':0.76,'G':0.43,'N':0.76,'P':0.34,'S':0.57,'D':0.99,'U':0.66}
+    #sheetvalues = {'E':0.52,'A':0.72,'L':1.22,'M':1.14,'Q':0.98,'K':0.69,'R':0.84,'H':0.8,'V':1.87,'I':1.67,'Y':1.45,'C':1.4,'W':1.35,'F':1.33,'T':1.17,'G':0.58,'N':0.48,'P':0.31,'S':0.96,'D':0.39,'U':1.4}
+
+
+    helix = sec_pred[0]
+    sheet = sec_pred[1]
+    Possible_subst = {}
+    
+    for key in free_AA_dict:
+        aminoacid = free_AA_dict[key]
+        if any(key in n for n in helix):
+            possible_subst= list(set(conserv_subst_dict[aminoacid]).intersection(set(helix_forming)))
+        elif any(key in n for n in sheet):
+            possible_subst = list(set(free_AA_dict[key]).intersection(set(sheet_forming)))
+        else:
+            possible_subst = conserv_subst_dict[aminoacid]
+            
+        random.shuffle(possible_subst)
+        Possible_subst[key] = possible_subst
+        
+    return Possible_subst
+
+def prot_mut(pdb_path, pdb_file, pqr_output_path, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 1000, seed = 0):
+    """
+    This function performs protein mutation analysis to improve the thermal stability of a protein, with minimal changes to the structure
+    (as measured by melting point). It takes a PDB file path, filename, and path for PQR output as input.
+
+    Args:
+        pdb_path (str): Path where the pdb file is stored.
+        pdb_file (str): Name of the PDB file.
+        pqr_output_path (str): Path where pqr file will be saved (also fasta and fas).
+        Deep_mut (bool, optional): Flag whether to include random mutation in screening
+            (random + rational, defaults to True).
+        iterations (int, optional): Number of iterations for rational improvement (defaults to 100).
+        cutoff_value (float, optional): Cutoff value for mutation selection in rational improvement 
+            (defaults to -0.005).
+        threshhold (int, optional): Threshold for random mutation acceptance (higher value leads to more mutations, 
+            defaults to 1000).
+        seed (int, optional): Seed for the random number generator (ensures reproducibility, defaults to 0).
+
+    Returns:
+        list: A list containing three elements:
+            - Tuple: (WT_SPARC object, best_SPARC object) - Wild-type and best mutated protein SPARC predictions.
+            - Tuple: (WT amino acid list, best mutated protein amino acid list) - Amino acid sequences.
+            - Tuple: (WT deviation sum, best mutated protein deviation sum) - Deviations of the protein structures.
+    """
+    #import functions
+
+    from function import AA2s4pred
+     
+    from function_mut import diff_weighted
+    from function_mut import mutator_rand
+    from function_mut import mutator_rational
+    from function_mut import functional_aa
+    from function_mut import free_aa
+    from function_mut import Subst_reducer
+    from function_mut import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, conserv_subst, non_conservative_substitutions
+    
+    from SPARC import SPARC
+    
+    from helper_function import pdb2AA
+    from helper_function import ArraySlice
+
+    from heapq import heappop, heappush
+    import heapq    
+   
+
+    #extract protein features
+    aa_list = pdb2AA(pdb_path, pdb_file)
+    aa_locked = functional_aa(pdb_path, pdb_file, pqr_output_path)
+    aa_free = free_aa(pdb_path, pdb_file, aa_locked)
+    aa_str = ''.join(aa_list)
+    free_AA_dict = {a: b for a, b in zip(aa_free[:,2], aa_free[:,1] )} # create dictionary from array the key is the absolute aminoacid position and value is the aminoacid
+    sec_prediction = AA2s4pred('./data/s4pred', pqr_output_path, aa_str, pdb_file)
+    possible_substitutions = Subst_reducer(sec_prediction, conserv_subst, free_AA_dict, seed = seed)
+
+
+    #calculate WT deviations
+    WT_dev_sum, WT_dev = diff_weighted(pos_corr, neg_corr, aa_list, ideal_pos_value, ideal_neg_value, sec_prediction)
+
+    if Deep_mut:
+        #randoly mutate protein (within given constraints), get top 10 mutations
+        top_variations = []
+        largest_variations = []
+        heappush(top_variations, (WT_dev_sum, WT_dev, aa_str))  # Placeholder for lowest score
+        heappush(largest_variations, (0, WT_dev, aa_str))  # Placeholder for largest variation
+        
+        Mut_seq_str = mutator_rand(aa_list, possible_substitutions, threshhold = threshhold, seed = seed)
+        for Mut_prot in Mut_seq_str:
+            Mut_dev_sum, Mut_dev = diff_weighted(pos_corr, neg_corr, Mut_prot, ideal_pos_value, ideal_neg_value, sec_prediction, sort = True)
+            Str_dev = sum(c1 != c2 for c1, c2 in zip(''.join(Mut_prot), aa_str))
+
+            #save the top 10 scores
+            if len(top_variations) < 11:
+                heappush(top_variations, (Mut_dev_sum, Mut_dev, Mut_prot)) 
+                    
+            elif Mut_dev_sum < top_variations[0][0]:
+                heappush(top_variations, (Mut_dev_sum, Mut_dev, Mut_prot))
+                heappop(top_variations)
+            
+            #saves top 10 largest variations
+            if len(largest_variations) <11:
+                heappush(largest_variations, (Str_dev, Mut_dev, Mut_prot))
+            elif Str_dev > largest_variations[0][0]:
+                heappush(largest_variations, (Str_dev, Mut_dev, Mut_prot))
+                heappop(largest_variations)
+                
+        heappush(top_variations, (WT_dev_sum, WT_dev, aa_str))
+        Random_creation = list(heapq.merge(top_variations, largest_variations))
+        print('Random mutation finished')
+        
+        
+    #define variables for iteration
+    prev_Mut_prot_list = aa_list    
+    prev_Mut_dev = WT_dev           
+    aa_available = aa_free          
+    
+    #define variables for best protein#
+    if Deep_mut:
+        best_Mut_prot_list = list(heappop(top_variations)[2])
+        best_Mut_dev_sum = heappop(top_variations)[0]
+        best_Mut_dev = heappop(top_variations)[1]
+        best_aa_available = aa_available
+    else:
+        best_Mut_prot_list = list(aa_list)
+        best_Mut_dev_sum = WT_dev_sum
+        best_Mut_dev = WT_dev
+        best_aa_available = aa_available
+        Random_creation = [(WT_dev_sum, WT_dev, aa_str)]
+    
+    # Initiate top 5 best variations of rational improvement to calculate melt point
+    top_top_variations = []
+    heappush(top_top_variations, (WT_dev_sum, WT_dev, aa_str))
+    
+    
+    #use top 10 mutated sequences and use rational improvement      
+    best_iteration = 0 #(used to track how many iterations are necessary, currently ~2-3 seems best)
+    for mut_seq in Random_creation:
+        prev_Mut_prot_list = list(mut_seq[2])
+        prev_Mut_dev_sum = mut_seq[0]
+        prev_Mut_dev = mut_seq[1]
+
+        for k in range(iterations):
+            Mut_prot_list, possible_mutations = mutator_rational(
+                                                    AA_list = prev_Mut_prot_list, 
+                                                    free_AA = aa_available, 
+                                                    deviation = prev_Mut_dev,
+                                                    pos_corr = pos_corr, 
+                                                    neg_corr =  neg_corr, 
+                                                    conserv_substitution = possible_substitutions,
+                                                    ideal_pos_value = ideal_pos_value, 
+                                                    ideal_neg_value = ideal_neg_value,
+                                                    cutoff = cutoff_value,
+                                                    sec_prediction = sec_prediction
+                                                    ) #f_value = cutoff, calculates list of possible mutations
+            
+            Mut_dev_sum, Mut_dev = diff_weighted(pos_corr, neg_corr, Mut_prot_list, ideal_pos_value, ideal_neg_value, sec_prediction) # calculate deviation of mutated protein sequence
+            
+            if len(top_top_variations) < 6:
+                heappush(top_top_variations, (Mut_dev_sum, Mut_dev, Mut_prot_list))
+            elif Mut_dev_sum < top_top_variations[0][0]:
+                heappush(top_top_variations, (Mut_dev_sum, Mut_dev, Mut_prot_list))
+                heappop(top_top_variations)
+                
+            if abs(best_Mut_dev_sum) > abs(Mut_dev_sum):
+                best_Mut_prot_list = Mut_prot_list
+                best_Mut_dev_sum = Mut_dev_sum
+                best_Mut_dev = Mut_dev  
+                best_possible_mutations = possible_mutations #get list of best mutations (AA-POS-AA), depreciated, bcs random mutator doesn't output this
+                best_iteration = str(k+1)
+                #aa_available = ArraySlice(aa_available, possible_mutations) #updates available aminoacids, so that each aminoacid can only be mutated once
+                
+            elif Mut_dev[0][0] == prev_Mut_dev[0][0] and abs(Mut_dev[0][1]-prev_Mut_dev[0][1]) < 0.001:
+                break
+                
+            #update variables for next iteration            
+            prev_possible_mutations = possible_mutations    #list of mutations (AA-POS-AA) (prev_possible_mutations can be printed if needed)
+            prev_Mut_prot_list = Mut_prot_list                        #Mutated protein as a list with one AA per entry
+            prev_Mut_dev = Mut_dev
+            prev_Mut_dev_sum = Mut_dev_sum
+    
+        
+    #for top_hit in top_top_variations:
+    #-------SPARC implementation missing--------#
+    wt_sparc = SPARC(aa_str, pdb_file.split('-')[1], './data', './data/s4pred')
+    best_temp = wt_sparc[0]
+    wt_temp = wt_sparc[0]  
+    best_SPARC = wt_sparc
+    
+    #select best mutation based on melt point
+    for top in top_top_variations:
+        top_SPARC = SPARC(''.join(top[2]), pdb_file.split('-')[1], './data', './data/s4pred')
+        top_temp = top_SPARC[0]
+        if top_SPARC[0] > best_temp:
+            best_temp = top_SPARC[0]
+            best_SPARC = top_SPARC
+            best_Mut_prot_list = top[2]
+            best_Mut_dev_sum = top[0]
+            best_Mut_dev = top[1]
+    
+    
+    
+    Improvement = WT_dev_sum - best_Mut_dev_sum
+    return [(wt_sparc, best_SPARC), (aa_list, best_Mut_prot_list), (WT_dev_sum, best_Mut_dev_sum)]
+
+def mutation_decreaser(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False):
+    from function_mut import diff_weighted
+    from function_mut import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value
+    from SPARC import SPARC
+    from heapq import heappop, heappush, nlargest, heapify
+    from function import AA2s4pred
+    import os
+    #diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:dict, sec_prediction, sort = True, sum_only = False):
+    #define variables for iteration
+    start_Tm_diff = mut_temp-wt_temp
+    wt_str = ''.join(wt_protein)
+    best_mut_str = ''.join(mut_protein)
+    Tm_diff = start_Tm_diff
+
+            
+    if sec_prediction == None:
+        sec_prediction = AA2s4pred('./data/s4pred', './data', wt_str, name)
+        os.remove(os.path.join('./data', f'{name}.fasta'))
+        os.remove(os.path.join('./data', f'{name}.fas'))
+    
+    wt_diff = diff_weighted(pos_corr, neg_corr, wt_str, ideal_pos_value, ideal_neg_value, sec_prediction, sum_only = True)
+    start_mut_diff = diff_weighted(pos_corr, neg_corr, best_mut_str, ideal_pos_value, ideal_neg_value, sec_prediction, sum_only = True)
+    mut_diff = start_mut_diff
+
+    while Tm_diff >= start_Tm_diff * cutoff or Tm_diff >= min_diff:
+        sorted_wt_screen = [(float('inf'), 'dummy')]
+        for i in range(len(best_mut_str)):
+            if best_mut_str[i] != wt_str[i]:
+                mut_str = best_mut_str[:i] + wt_str[i] + best_mut_str[i+1:]
+                mut_diff = diff_weighted(pos_corr, neg_corr, mut_str, ideal_pos_value, ideal_neg_value, sec_prediction, sum_only = True) #calculate deviation to fully mutated protein
+                heappush(sorted_wt_screen, (mut_diff, mut_str))
+
+        #get new mutated protein with least difference to original mutated protein 
+        best_mut_diff = heappop(sorted_wt_screen)[0]
+        best_mut_str = heappop(sorted_wt_screen)[1]
+        sparc_screen = SPARC(mut_str, name, './data', './data/s4pred')
+        Tm_diff = sparc_screen[0][0] - wt_temp
+        
+        if best_mut_str == wt_str:
+            break
+    
+    return (best_mut_str, best_mut_diff, sparc_screen[0][0])
