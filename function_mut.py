@@ -501,7 +501,6 @@ def mutator_rand(AAs_list, substitutions, threshhold = 100, seed = 0):
         if not subst_options:
             break
         
-        # Generate all combinations of substitutions
         for combination in product(*subst_options):
             # Start with the original protein sequence
             prot_variation = list(AAs_list)
@@ -727,6 +726,7 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
     return VdW_cluster, VdW_volume
                 
 def H_bond_calc(path, pqr_files=None):
+    #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub#sec2
     import numpy as np
     import os
     import scipy
@@ -798,7 +798,7 @@ def H_bond_calc(path, pqr_files=None):
 
     return HB_dict
                                             
-def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
+def AA2s4pred (directory_S4pred, output_path, AA_seq, prot, remove_file = None):
     import os
     from function_mut import fasparse
     os.getcwd()
@@ -822,7 +822,10 @@ def AA2s4pred (directory_S4pred, output_path, AA_seq, prot):
         os.chdir('../../')
      
     #read fas file and   
-    sec_pred = fasparse(abs_fas)    
+    sec_pred = fasparse(abs_fas)
+    if remove_file:
+        os.remove(fastapath)
+        os.remove(faspath) 
 
     return sec_pred 
 
@@ -1233,13 +1236,15 @@ def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, see
             possible_subst = list(set(free_AA_dict[key]).intersection(set(sheet_forming)))
         else:
             possible_subst = conserv_subst_dict[aminoacid]
+        
+        possible_subst.append(aminoacid)
             
         random.shuffle(possible_subst)
         Possible_subst[key] = possible_subst
         
     return Possible_subst
 
-def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 1000, seed = 0):
+def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 10000, seed = 0, remove_files = None):
     """
     This function performs protein mutation analysis to improve the thermal stability of a protein, with minimal changes to the structure
     (as measured by melting point). It takes a PDB file path, filename, and path for PQR output as input.
@@ -1255,7 +1260,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
         cutoff_value (float, optional): Cutoff value for mutation selection in rational improvement 
             (defaults to -0.005).
         threshhold (int, optional): Threshold for random mutation acceptance (higher value leads to more mutations, 
-            defaults to 1000).
+            defaults to 10000).
         seed (int, optional): Seed for the random number generator (ensures reproducibility, defaults to 0).
 
     Returns:
@@ -1281,6 +1286,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     
     from heapq import heappop, heappush
     import heapq    
+    import os
    
 
     #extract protein features
@@ -1294,7 +1300,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
         for pos in locked_aa_pos:
             free_AA_dict.pop(pos)
     
-    sec_prediction = AA2s4pred('./data/s4pred', pqr_output_path, aa_str, pdb_file)
+    sec_prediction = AA2s4pred('./data/s4pred', pqr_output_path, aa_str, pdb_file, remove_file = remove_files)
     possible_substitutions = Subst_reducer(sec_prediction, conserv_subst, free_AA_dict, seed = seed)
 
 
@@ -1424,6 +1430,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     
     
     Improvement = WT_dev_sum - best_Mut_dev_sum
+    
     return [(wt_sparc, best_SPARC), (aa_list, best_Mut_prot_list), (WT_dev_sum, best_Mut_dev_sum)]
 
 def mutation_decreaser(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False):
