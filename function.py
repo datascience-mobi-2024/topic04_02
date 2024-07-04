@@ -308,7 +308,7 @@ def p_val(corr, n, alpha):
         p = 1 - stats.t.cdf(t, n-2)
         return [p, p < alpha]
 
-def pain(data, by= None, lower = 0.1, upper = 0.9):
+def quantiles(data, by= None, lower = 0.1, upper = 0.9):
     """
     data: pandas DataFrame or Series, if series then no argument by \n
     by: column to filter by (string) (only applicable if data is a DataFrame) \n
