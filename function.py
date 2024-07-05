@@ -39,7 +39,7 @@ def pdb2pqr(input_path, output_path,pdb_files=None):
         pdb_files = [pdb_files]
     for pdb_file in pdb_files:
         name = f'{(pdb_file.split(".")[0]).split("-")[1]}.pqr'
-        os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
+        os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={"AMBER"} --noop')
 
 #https://www.bioinformation.net/003/002800032008.pdf
 def salt_bridge(path, pdb_files=None):
@@ -358,7 +358,7 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     prot_name = pdb_file.split('-')[1]
     
     #create pqr file
-    pqr_file = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+    pqr_file = f'{(pdb_file.split(".")[0]).split("-")[1]}.pqr'
 
     if os.path.isfile(os.path.join(output_path, f'{(pdb_file.split(".")[0]).split("-")[1]}.pqr')):
         print('Pqr file already exists')
