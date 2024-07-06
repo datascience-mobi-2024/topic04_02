@@ -11,7 +11,7 @@ def fasparse(faspath):
     return [helix, sheet]
 
 # SPARC: "Sequence-based Protein Attribute-deRived Melt Point Calculator"
-def SPARC(data:str, name, datapath, directoryS4):
+def SPARC(data:str, name, datapath, directoryS4, removefiles = True):
     """
     data: string, protein sequence
     name: arbitrary name for the protein
@@ -82,7 +82,8 @@ def SPARC(data:str, name, datapath, directoryS4):
     features_scaled = scaler1.transform(featuresdf)
     features_pca = pca1.transform(features_scaled)
     prediction = model1.predict(features_pca)
-    os.remove(fastapath)
-    os.remove(faspath)
+    if removefiles == True:
+        os.remove(fastapath)
+        os.remove(faspath)
     
     return [prediction,features,features_scaled,features_pca]

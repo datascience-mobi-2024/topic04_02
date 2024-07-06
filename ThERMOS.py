@@ -217,7 +217,7 @@ def distance (array1, array2, cutoff = None, remove_nan=True):
         raise ValueError('remove_nan must be either True or False')
         
 def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub
-    from function_mut import distance
+    from ThERMOS import distance
     import numpy as np
     import warnings
     
@@ -380,7 +380,7 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
             - sorted_keys (list, optional): If sort=True, a list of features sorted by their weighted deviation (highest first).
                 - WT_weight (dict, optional): If sort=False, a dictionary containing the weighted deviation for each feature.
     """
-    from function_mut import rel_aa_comp
+    from ThERMOS import rel_aa_comp
     import operator
 
     AA_polar = 'NQSTY'
@@ -473,8 +473,8 @@ def mut_apply(AA_list, Mut_list):
         return(print('Mut list is empty'))
 
 def mut_live_test (AA_list, Mut_list, pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, sec_prediction):
-    from function_mut import mut_apply
-    from function_mut import diff_weighted
+    from ThERMOS import mut_apply
+    from ThERMOS import diff_weighted
     AAs = ''.join(AA_list)
     WT_sum, WT_diff = diff_weighted(pos_corr, neg_corr, AAs, ideal_pos_value, ideal_neg_value, sec_prediction)
     AA_mut = mut_apply(AA_list, Mut_list)
@@ -532,11 +532,11 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     """
     
     #import necessary functions
-    from function_mut import salt_bridge
-    from function_mut import H_bond_calc
-    from function_mut import VdW_interaction
-    from function_mut import pdb2pqr
-    from function_mut import remove_nan
+    from ThERMOS import salt_bridge
+    from ThERMOS import H_bond_calc
+    from ThERMOS import VdW_interaction
+    from ThERMOS import pdb2pqr
+    from ThERMOS import remove_nan
     import os
     import numpy as np
     import pandas as pd
@@ -638,7 +638,7 @@ def salt_bridge(path, pdb_files=None): #https://www.bioinformation.net/003/00280
     import os
     import scipy
     from scipy.spatial.distance import cdist
-    from function_mut import distance
+    from ThERMOS import distance
     import re
     
     if pdb_files is None:
@@ -675,9 +675,9 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
     from scipy.spatial.distance import cdist
     import re
     
-    from function_mut import distance
-    from function_mut import cluster_calc
-    from function_mut import intersect_vol
+    from ThERMOS import distance
+    from ThERMOS import cluster_calc
+    from ThERMOS import intersect_vol
     
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
@@ -731,8 +731,8 @@ def H_bond_calc(path, pqr_files=None):
     import os
     import scipy
     from scipy.spatial.distance import cdist
-    from function_mut import distance
-    from function_mut import angle_calc
+    from ThERMOS import distance
+    from ThERMOS import angle_calc
     
     Donor_dict = {'GLN': [('NE2', 'HE21'), ('NE2', 'HE22')], 
                 'GLU': [('OE2', 'HE2')], 
@@ -800,7 +800,7 @@ def H_bond_calc(path, pqr_files=None):
                                             
 def AA2s4pred (directory_S4pred, output_path, AA_seq, prot, remove_file = None):
     import os
-    from function_mut import fasparse
+    from ThERMOS import fasparse
     os.getcwd()
     # call s4pred and create fas file
     fastapath = os.path.join(output_path,f'{prot}.fasta')
@@ -905,10 +905,10 @@ def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:d
     """
     
     import itertools
-    from function_mut import rel_aa_comp
-    from function_mut import mut_apply
-    from function_mut import mut_live_test
-    from function_mut import AA_polar_neutral
+    from ThERMOS import rel_aa_comp
+    from ThERMOS import mut_apply
+    from ThERMOS import mut_live_test
+    from ThERMOS import AA_polar_neutral
     
     pos_corr_list = list(pos_corr.keys())
     neg_corr_list = list(neg_corr.keys())
@@ -1158,25 +1158,25 @@ def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:d
             aa2increase = first_entry[0]         
             for pos in free_AA_dict:
                 for helix in helices:
-                    if key in helix:
-                        aminoacid = free_AA_dict[pos]
-                        if aminoacid != aa2increase:
-                            poss_subst = conserv_substitution[pos]
-                            for subst in poss_subst:
-                                if subst == aa2increase:
-                                    mut_aa = f'{aminoacid}-{pos}-{subst}'
-                                    Diff = mut_live_test(AA_mut_list, [mut_aa], pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, sec_prediction)
-                                    if Diff > Diff_start:
-                                        AA_mut_list = mut_apply(AA_list, [mut_aa])
-                                        mut_list.append(mut_aa)
-                                        mut_AAs = ''.join(AA_mut_list)
-                                        break
+                        if first_entry in helix:
+                            aminoacid = free_AA_dict[pos]
+                            if aminoacid != aa2increase:
+                                poss_subst = conserv_substitution[pos]
+                                for subst in poss_subst:
+                                    if subst == aa2increase:
+                                        mut_aa = f'{aminoacid}-{pos}-{subst}'
+                                        Diff = mut_live_test(AA_mut_list, [mut_aa], pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, sec_prediction)
+                                        if Diff > Diff_start:
+                                            AA_mut_list = mut_apply(AA_list, [mut_aa])
+                                            mut_list.append(mut_aa)
+                                            mut_AAs = ''.join(AA_mut_list)
+                                            break
         
         if first_entry in neg_corr_list:
             aa2reduce = first_entry[0]
             for pos in free_AA_dict:
                 for helix in helices:
-                    if key in helix:
+                    if first_entry in helix:
                         aminoacid = free_AA_dict[pos]
                         if aminoacid == aa2reduce:
                             poss_subst = conserv_substitution[pos]
@@ -1271,16 +1271,16 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     """
     #import functions
 
-    from function_mut import AA2s4pred
-    from function_mut import diff_weighted
-    from function_mut import mutator_rand
-    from function_mut import mutator_rational
-    from function_mut import functional_aa
-    from function_mut import free_aa
-    from function_mut import Subst_reducer
-    from function_mut import pdb2AA
-    from function_mut import ArraySlice
-    from function_mut import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, conserv_subst, non_conservative_substitutions
+    from ThERMOS import AA2s4pred
+    from ThERMOS import diff_weighted
+    from ThERMOS import mutator_rand
+    from ThERMOS import mutator_rational
+    from ThERMOS import functional_aa
+    from ThERMOS import free_aa
+    from ThERMOS import Subst_reducer
+    from ThERMOS import pdb2AA
+    from ThERMOS import ArraySlice
+    from ThERMOS import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, conserv_subst, non_conservative_substitutions
 
     from SPARC import SPARC
     
@@ -1298,11 +1298,11 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     
     if locked_aa_pos is not None:
         for pos in locked_aa_pos:
-            free_AA_dict.pop(pos)
+            if free_AA_dict.get(pos) is not None:
+                free_AA_dict.pop(pos)
     
     sec_prediction = AA2s4pred('./data/s4pred', pqr_output_path, aa_str, pdb_file, remove_file = remove_files)
     possible_substitutions = Subst_reducer(sec_prediction, conserv_subst, free_AA_dict, seed = seed)
-
 
     #calculate WT deviations
     WT_dev_sum, WT_dev = diff_weighted(pos_corr, neg_corr, aa_list, ideal_pos_value, ideal_neg_value, sec_prediction)
@@ -1359,7 +1359,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     
     # Initiate top 5 best variations of rational improvement to calculate melt point
     top_top_variations = []
-    heappush(top_top_variations, (WT_dev_sum, WT_dev, aa_str))
+    heappush(top_top_variations, (float(WT_dev_sum), WT_dev, aa_str))
     
     
     #use top 10 mutated sequences and use rational improvement      
@@ -1385,9 +1385,11 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
             
             Mut_dev_sum, Mut_dev = diff_weighted(pos_corr, neg_corr, Mut_prot_list, ideal_pos_value, ideal_neg_value, sec_prediction) # calculate deviation of mutated protein sequence
             
+            best_dev = float(top_top_variations[0][0])
             if len(top_top_variations) < 6:
-                heappush(top_top_variations, (Mut_dev_sum, Mut_dev, Mut_prot_list))
-            elif Mut_dev_sum < top_top_variations[0][0]:
+                heappush(top_top_variations, (float(Mut_dev_sum), Mut_dev, Mut_prot_list))
+
+            elif float(Mut_dev_sum) < best_dev:
                 heappush(top_top_variations, (Mut_dev_sum, Mut_dev, Mut_prot_list))
                 heappop(top_top_variations)
                 
@@ -1433,10 +1435,10 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     
     return [(wt_sparc, best_SPARC), (aa_list, best_Mut_prot_list), (WT_dev_sum, best_Mut_dev_sum)]
 
-def mutation_decreaser(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False):
-    from function_mut import diff_weighted
-    from function_mut import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value
-    from function_mut import AA2s4pred
+def mutation_decreaser(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False, ):
+    from ThERMOS import diff_weighted
+    from ThERMOS import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value
+    from ThERMOS import AA2s4pred
     from SPARC import SPARC
     from heapq import heappop, heappush, nlargest, heapify
 
@@ -1458,19 +1460,25 @@ def mutation_decreaser(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff 
     start_mut_diff = diff_weighted(pos_corr, neg_corr, best_mut_str, ideal_pos_value, ideal_neg_value, sec_prediction, sum_only = True)
     mut_diff = start_mut_diff
 
-    while Tm_diff >= start_Tm_diff * cutoff or Tm_diff >= min_diff:
+    count  =  0
+    while (Tm_diff >= start_Tm_diff * cutoff) and (Tm_diff >= min_diff):
         sorted_wt_screen = [(float('inf'), 'dummy')]
         for i in range(len(best_mut_str)):
             if best_mut_str[i] != wt_str[i]:
                 mut_str = best_mut_str[:i] + wt_str[i] + best_mut_str[i+1:]
                 mut_diff = diff_weighted(pos_corr, neg_corr, mut_str, ideal_pos_value, ideal_neg_value, sec_prediction, sum_only = True) #calculate deviation to fully mutated protein
                 heappush(sorted_wt_screen, (mut_diff, mut_str))
+        count  +=1
 
         #get new mutated protein with least difference to original mutated protein 
         best_mut_diff = heappop(sorted_wt_screen)[0]
         best_mut_str = heappop(sorted_wt_screen)[1]
-        sparc_screen = SPARC(mut_str, name, './data', './data/s4pred')
+        sparc_screen = SPARC(best_mut_str, name, './data', './data/s4pred')
         Tm_diff = sparc_screen[0][0] - wt_temp
+        No_mutations = 0 
+        for i in range(len(best_mut_str)):
+            if best_mut_str[i] != wt_str[i]:
+                No_mutations += 1
         
         if best_mut_str == wt_str:
             break
