@@ -18,7 +18,7 @@ class Protein:
         self.PDB = PDB
         from SPARC import SPARC
         self.sequence = seq.upper()
-        result = SPARC(self.sequence, 'placeholder', dpath, S4path)
+        result = SPARC(self.sequence, 'test', dpath, S4path)
         self.SPARC = result[0][0]
         self.features = result[1]
         self.features_scaled = result[2]

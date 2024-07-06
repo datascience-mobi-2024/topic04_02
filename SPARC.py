@@ -93,7 +93,7 @@ def SPARC(data:str, name, datapath, directoryS4):
     data: string, protein sequence
     name: arbitrary name for the protein
     datapath: string, path to data directory, only "/" allowed
-    directoryS4: string, compltete path to directory of S4pred, only "/" allowed
+    directoryS4: string, complete path to directory of S4pred, only "/" allowed
     """
     import joblib
     import numpy as np
