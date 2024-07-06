@@ -1240,7 +1240,6 @@ def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, see
     return Possible_subst
 
 
-
 #Main mutation function
 def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 10000, seed = 0, remove_files = None):
     """
