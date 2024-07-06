@@ -1244,7 +1244,7 @@ def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, see
         
     return Possible_subst
 
-def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 10000, seed = 0, remove_files = None):
+def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 10000, seed = 0, remove_files = None):
     """
     This function performs protein mutation analysis to improve the thermal stability of a protein, with minimal changes to the structure
     (as measured by melting point). It takes a PDB file path, filename, and path for PQR output as input.
@@ -1435,7 +1435,7 @@ def prot_mut(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=T
     
     return [(wt_sparc, best_SPARC), (aa_list, best_Mut_prot_list), (WT_dev_sum, best_Mut_dev_sum)]
 
-def mutation_decreaser(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False, ):
+def ThERMless(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False, ):
     from ThERMOS import diff_weighted
     from ThERMOS import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value
     from ThERMOS import AA2s4pred
