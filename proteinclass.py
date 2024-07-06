@@ -27,11 +27,35 @@ class Protein:
             setattr(self, i, self.features[i])
     def __str__(self):
         return f"Protein with predicted melting point of {str(self.SPARC).strip('[]')} °C"
-    def mutate(self,pqr_output_path='./data/pqrs',iterations = 100, threshhold = 1000):
-        from function_mut import prot_mut
-        output_mut = prot_mut(pdb_path = './data/pdbs', pdb_file=self.PDB,pqr_output_path=pqr_output_path,iterations = iterations, threshhold = threshhold)
+    def ThERMOS(self,pqr_output_path='./data/pqrs',iterations = 100, threshhold = 10000):
+        """
+        This function performs protein mutation analysis to improve the thermal stability of a protein, with minimal changes to the structure
+        (as measured by melting point). It takes a PDB file path, filename, and path for PQR output as input.
+
+        Args:
+            pdb_path (str): Path where the pdb file is stored.
+            pdb_file (str): Name of the PDB file.
+            pqr_output_path (str): Path where pqr file will be saved (also fasta and fas).
+            locked_aa_pos (list, optional): List of amino acid positions that should not be mutated (defaults to None).
+            Deep_mut (bool, optional): Flag whether to include random mutation in screening
+                (random + rational, defaults to True).
+            iterations (int, optional): Number of iterations for rational improvement (defaults to 100).
+            cutoff_value (float, optional): Cutoff value for mutation selection in rational improvement 
+                (defaults to -0.005).
+            threshhold (int, optional): Threshold for random mutation acceptance (higher value leads to more mutations, 
+                defaults to 10000).
+            seed (int, optional): Seed for the random number generator (ensures reproducibility, defaults to 0).
+
+        Returns:
+            list: A list containing three elements:
+                - Tuple: (WT_SPARC object, best_SPARC object) - Wild-type and best mutated protein SPARC predictions.
+                - Tuple: (WT amino acid list, best mutated protein amino acid list) - Amino acid sequences.
+                - Tuple: (WT deviation sum, best mutated protein deviation sum) - Deviations of the protein structures.
+        """
+        from ThERMOS import ThERMOS
+        output_mut = ThERMOS(pdb_path = './data/pdbs', pdb_file=self.PDB,pqr_output_path=pqr_output_path,iterations = iterations, threshhold = threshhold)
         self.mutatedmp = output_mut[0][1][0][0]
-        self.mutatedseq = output_mut[1][0]
+        self.mutatedseq = output_mut[1][1]
         self.mutatedmpdiff = self.mutatedmp - self.SPARC
         mutationlist = []
         for n in range(len(self.mutatedseq)):
@@ -39,9 +63,9 @@ class Protein:
                 mutationlist.append(f'{self.sequence[n]}{n+1}{self.mutatedseq[n]}')
         self.mutationlist = mutationlist
         return [self.mutatedmp, self.mutatedseq, self.mutatedmpdiff, self.mutationlist]
-    def mutreduce(self,name = 'proteinxyz'):
-        from function_mut import mutation_decreaser
-        outputdecreaser = mutation_decreaser(mut_temp = self.mutatedmp, wt_temp = self.SPARC, wt_protein = self.sequence, mut_protein = self.mutatedseq, name = name)
+    def ThERMless(self,name = 'proteinxyz'):
+        from ThERMOS import ThERMless
+        outputdecreaser = ThERMless(mut_temp = self.mutatedmp, wt_temp = self.SPARC, wt_protein = self.sequence, mut_protein = self.mutatedseq, name = name)
         self.mut_mp_reduced = outputdecreaser[2]
         self.mut_seq_reduced = outputdecreaser[0]
         mutationlist_reduced = []

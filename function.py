@@ -70,7 +70,7 @@ def salt_bridge(path, pdb_files=None):
                         line_array = line_array.astype('float64')
                         Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
 
-            from helper_function import distance
+            from archive.helper_function import distance
             Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
     return Salt_bridges
 
@@ -113,14 +113,14 @@ def VdW_interaction(path, pdb_files=None):
                         elif 'O' in line[12:17]:
                             X_array = np.append(X_array, int('2'))
             
-            from helper_function import distance
+            from archive.helper_function import distance
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             
-            from helper_function import cluster_calc
+            from archive.helper_function import cluster_calc
             Atom_distance = np.nan_to_num(Atom_distance)
             VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance)
             
-            from helper_function import intersect_vol
+            from archive.helper_function import intersect_vol
             Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
             Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
             VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
@@ -133,8 +133,8 @@ def H_bond_calc(path, pqr_files=None):
     import os
     import scipy
     from scipy.spatial.distance import cdist
-    from helper_function import distance
-    from helper_function import angle_calc
+    from archive.helper_function import distance
+    from archive.helper_function import angle_calc
     
     Donor_dict = {'GLN': [('NE2', 'HE21'), ('NE2', 'HE22')], 
                 'GLU': [('OE2', 'HE2')], 
@@ -196,8 +196,8 @@ def H_bond_calc(path, pqr_files=None):
                         atom_cache = [] 
 
             
-        from helper_function import distance
-        from helper_function import angle_calc
+        from archive.helper_function import distance
+        from archive.helper_function import angle_calc
         angle = angle_calc(Donor_array, H_array, Acceptor_array)
         HB_dict[str(pqr_file).split('.')[0]] = angle
 
@@ -263,7 +263,7 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     from function import H_bond_calc
     from function import VdW_interaction
     from function import pdb2pqr
-    from helper_function import remove_nan
+    from archive.helper_function import remove_nan
     import os
     import numpy as np
     import pandas as pd
