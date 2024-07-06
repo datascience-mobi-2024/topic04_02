@@ -1,3 +1,4 @@
+#Define variables
 pos_corr = {'YR': 0.492442, 
                 'RP': 0.480594, 
                 'RG': 0.442533, 
@@ -90,8 +91,7 @@ ideal_neg_value = {'IQ': 0.05490211183163266,
                     'PolarAA': 0.14402202391640712, 
                     'Qhelix': 0.02831461743013483
                     }
-#possible substitutions for each aminoacid, taken from literature
-#https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003674
+
 conserv_subst = {
         'A': ['D', 'E', 'G', 'S', 'T'],
         'C': ['G', 'R', 'S', 'W', 'Y'],
@@ -130,9 +130,10 @@ non_conservative_substitutions = {
         'V': ['A', 'F', 'G'],
         'W': ['G'],
         }
-
 AA_polar_neutral:list = ['N', 'Q', 'S', 'T', 'Y']
 
+
+#Calculate relative amount of sinlge or mutliple amino acids in a sequence
 def rel_aa_comp(Sequence:str, AA_property): 
     count = 0
     for n in AA_property:
@@ -140,7 +141,86 @@ def rel_aa_comp(Sequence:str, AA_property):
             if n ==i:
                 count += 1
     return count/len(Sequence)
+#3-letter to 1-letter amino acid conversion
+def AAA2A(AA:list, str=True):
+    AA_dict = {
+        "ALA": "A",
+        "CYS": "C",
+        "ASP": "D",
+        "GLU": "E",
+        "PHE": "F",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LYS": "K",
+        "LEU": "L",
+        "MET": "M",
+        "ASN": "N",
+        "PRO": "P",
+        "GLN": "Q",
+        "ARG": "R",
+        "SER": "S",
+        "THR": "T",
+        "VAL": "V",
+        "TRP": "W",
+        "TYR": "Y",
+        "SEC": "U",
+        "PYL": "O",
+        }
+    for n in range(len(AA)):
+        AA[n] = AA_dict[AA[n]]
+    if str:
+        return "".join(AA)
+    else:
+        return AA
 
+
+#Secondary structure functions
+#parse fas file (created by S4pred) to get helix and sheet 
+def fasparse(faspath):
+    import numpy as np
+    helixl = []
+    sheetl = []
+    data = np.loadtxt(faspath, dtype={'names': ('index', 'col1', 'col2', 'val1', 'val2', 'val3'),'formats': ('i4', 'S1', 'S1', 'f4', 'f4', 'f4')})
+    indiceshelix = data['index'][data['col2'] == b'H']
+    indicessheet = data['index'][data['col2'] == b'E']
+    helix = np.split(indiceshelix, np.where(np.diff(indiceshelix) != 1)[0]+1)
+    sheet = np.split(indicessheet, np.where(np.diff(indicessheet) != 1)[0]+1)
+    return [helix, sheet]
+#Secondary structure prediction using S4pred                                            
+def AA2s4pred (directory_S4pred, output_path, AA_seq, prot, remove_file = None):
+    import os
+    from ThERMOS import fasparse
+    os.getcwd()
+    # call s4pred and create fas file
+    fastapath = os.path.join(output_path,f'{prot}.fasta')
+    faspath = os.path.join(output_path,f'{prot}.fas')
+    abs_fasta = os.path.abspath(fastapath)
+    abs_fas = os.path.abspath(faspath)
+
+    if os.path.isfile(fastapath):
+        print(f'fasta file already exists')
+    else:
+        with open(os.path.join(output_path,f'{prot}.fasta'), "w") as fasta_file:
+            fasta_file.write(f">{prot}\n{AA_seq}\n")
+        
+    if os.path.isfile(faspath):
+        print('fas file already exists')
+    else:
+        os.chdir(directory_S4pred)
+        os.system(f'python3 run_model.py "{abs_fasta}" > "{abs_fas}"')
+        os.chdir('../../')
+     
+    #read fas file and   
+    sec_pred = fasparse(abs_fas)
+    if remove_file:
+        os.remove(fastapath)
+        os.remove(faspath) 
+
+    return sec_pred 
+
+
+#Tertiary analysis functions
 #Clusters atoms if they are within a set distance
 def cluster_calc(array, by_atom=False):
     Cluster ={}
@@ -176,7 +256,6 @@ def cluster_calc(array, by_atom=False):
         return clust_inv
     else:
         return Cluster
-
 #Calculates the volume of intersection between two spheres
 def intersect_vol(array, r1:str, r2:str, dis = None):   
     import numpy as np
@@ -189,7 +268,6 @@ def intersect_vol(array, r1:str, r2:str, dis = None):
         d = array[1:,1:]
     vol[1:,1:] = (np.pi*(r2+r1-d)**2 * (d**2 + 2*d*r1 - 3*r1**2 + 2*d*r2 + 6*r1*r2 - 3*r2**2))/(12*d)
     return vol
-
 #Calculates distance based on two arrays, with set cutoff as a maximum distance allowed
 def distance (array1, array2, cutoff = None, remove_nan=True):
     from scipy.spatial.distance import cdist
@@ -215,8 +293,8 @@ def distance (array1, array2, cutoff = None, remove_nan=True):
         return distance
     else:
         raise ValueError('remove_nan must be either True or False')
-        
-def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub
+#Calculate angles between donor-hydrogen-acceptor atoms for H-bond calculation        
+def angle_calc(Donor_array, H_array, Acceptor_array):
     from ThERMOS import distance
     import numpy as np
     import warnings
@@ -240,7 +318,7 @@ def angle_calc(Donor_array, H_array, Acceptor_array): #https://www.sciencedirect
     H_id[1:,0] = d_DH[:,1,0]
     angle = np.dstack((angle, H_id))
     return angle
-
+#remove rows/colums with nans from numpy array
 def remove_nan(array):
     import numpy as np
     rows_with_nan = np.insert(np.array([np.all(np.isnan(array[1:, 1:]), axis=1)]),0, None) #find rows with all nan values
@@ -249,7 +327,7 @@ def remove_nan(array):
     array = array[:, ~cols_with_nan] #delete columns with all nan values
     array[:,0] = array[:,0].astype('int')
     return array
-
+#Convert pdb file to amino acid sequence
 def pdb2AA(path, file_name, list_output=True):
     """
     Extracts the amino acid sequence from a PDB file.
@@ -309,59 +387,199 @@ def pdb2AA(path, file_name, list_output=True):
     else:
         AA_string = ''.join(aa1)
         return AA_string
-
-def AAA2A(AA:list, str=True):
-    AA_dict = {
-        "ALA": "A",
-        "CYS": "C",
-        "ASP": "D",
-        "GLU": "E",
-        "PHE": "F",
-        "GLY": "G",
-        "HIS": "H",
-        "ILE": "I",
-        "LYS": "K",
-        "LEU": "L",
-        "MET": "M",
-        "ASN": "N",
-        "PRO": "P",
-        "GLN": "Q",
-        "ARG": "R",
-        "SER": "S",
-        "THR": "T",
-        "VAL": "V",
-        "TRP": "W",
-        "TYR": "Y",
-        "SEC": "U",
-        "PYL": "O",
-        }
-    for n in range(len(AA)):
-        AA[n] = AA_dict[AA[n]]
-    if str:
-        return "".join(AA)
-    else:
-        return AA
+#calculates the solvent accessible surface area of a protein
+def SASA_calc(path, pdb_files=None):
+    from Bio.PDB import PDBParser
+    from Bio.PDB.SASA import ShrakeRupley
+    import os
+    SASA_dict = {}
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    for pdb_file in pdb_files:
+        struct = PDBParser(QUIET=1).get_structure(pdb_file.split('-')[1], os.path.join(path, str(pdb_file)))
+        ShrakeRupley().compute(struct, level = 'S')
+        SASA_dict[pdb_file.split('-')[1]] = struct.sasa
+    return SASA_dict
+#calculate hydrogen bonds                
+def H_bond_calc(path, pqr_files=None):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    from ThERMOS import distance
+    from ThERMOS import angle_calc
     
-def ArraySlice (Array, possible_mutations):
-    import numpy as np
-    free_AA = Array
-    index_list = [i.split('-')[1] for i in possible_mutations]
-    mask = ~np.isin(Array, index_list)
-    mask = np.all(mask, axis=1)
-    filtered_AA = free_AA[mask]
-    return filtered_AA
+    Donor_dict = {'GLN': [('NE2', 'HE21'), ('NE2', 'HE22')], 
+                'GLU': [('OE2', 'HE2')], 
+                'ASP': [('OD2', 'HD2')], 
+                'ASN': [('ND2', 'HD21'), ('ND2', 'HD22')], 
+                'HIS': [('NE2', 'HE2'), ('ND1', 'HD2')], 
+                'LYS': [('NZ', 'HZ1'), ('NZ', 'HZ2'), ('NZ', 'HZ3')], 
+                'ARG': [('NE', 'HE'), ('NH1', 'HH11'), ('NH1', 'HH12'), ('NH2', 'HH21'), ('NH2', 'HH22')], 
+                'SER': [('OG', 'HG')], 
+                'THR': [('OG1', 'HG1')], 
+                'TRP': [('NE1', 'HE1')], 
+                'TYR': [('OH', 'HH')]}
 
-def fasparse(faspath):
-    import numpy as np
-    helixl = []
-    sheetl = []
-    data = np.loadtxt(faspath, dtype={'names': ('index', 'col1', 'col2', 'val1', 'val2', 'val3'),'formats': ('i4', 'S1', 'S1', 'f4', 'f4', 'f4')})
-    indiceshelix = data['index'][data['col2'] == b'H']
-    indicessheet = data['index'][data['col2'] == b'E']
-    helix = np.split(indiceshelix, np.where(np.diff(indiceshelix) != 1)[0]+1)
-    sheet = np.split(indicessheet, np.where(np.diff(indicessheet) != 1)[0]+1)
-    return [helix, sheet]
+    Acceptor_dict = {'GLN': [('OE1')], 
+                'ASP': [('OD1'), ('OD2')], 
+                'ASN': ['OD1'], 
+                'GLU': [('OE1'), ('OE2')], 
+                'SER': ['OG'], 
+                'THR': ['OG1']}
+    HB_dict = {}
+    if pqr_files is None:
+        pqr_files = [f for f in os.listdir(path) if f.endswith('.pqr')]
+    if isinstance(pqr_files, str):
+        pqr_files = [pqr_files]
+    for pqr_file in pqr_files:
+        with open(os.path.join(path, str(pqr_file))) as f:
+            Donor_array = np.empty((0, 4))
+            H_array = np.empty((0, 4))
+            Acceptor_array = np.empty((0, 4))
+            aa_cache = []
+            atom_cache = []
+            for line in f:
+                line = line.replace('-', '  -')
+                if line.startswith('ATOM'):
+                    if not aa_cache:
+                        aa_cache.append(line.split()[3])
+                        aa_cache.append(line.split()[4])
+                        atom_cache.append(line)
+                    elif aa_cache[1] == line.split()[4]:
+                        atom_cache.append(line)
+                    elif aa_cache[1] != line.split()[4]:
+                        if aa_cache[0] in Donor_dict.keys():
+                            sub_donor = Donor_dict[aa_cache[0]] #extracts list (with tupels of Donor, Hydrogen) for the amino acid
+                            for n in sub_donor:
+                                donor_match = [entry for entry in atom_cache if n[0] in entry]
+                                h_match = [entry for entry in atom_cache if n[1] in entry]
+                                if donor_match and h_match:
+                                    d_line = np.array([[int(donor_match[0].split()[1]), float(donor_match[0].split()[5]), float(donor_match[0].split()[6]), float(donor_match[0].split()[7])]]) 
+                                    h_line = np.array([[int(h_match[0].split()[1]), float(h_match[0].split()[5]), float(h_match[0].split()[6]), float(h_match[0].split()[7])]])
+                                    Donor_array = np.append(Donor_array, d_line, axis=0)
+                                    H_array = np.append(H_array, h_line, axis=0)
+                        if aa_cache[0] in Acceptor_dict.keys():
+                            sub_acc = Acceptor_dict[aa_cache[0]] #extracts list of acceptors for the amino acid
+                            for n in sub_acc:
+                                acc_match = [entry for entry in atom_cache if n in entry]               
+                                a_line = np.array([[int(acc_match[0].split()[1]), float(acc_match[0].split()[5]), float(acc_match[0].split()[6]), float(acc_match[0].split()[7])]])
+                                Acceptor_array = np.append(Acceptor_array, a_line, axis=0)
+                        aa_cache = []
+                        atom_cache = [] 
 
+        angle = angle_calc(Donor_array, H_array, Acceptor_array)
+        HB_dict[str(pqr_file).split('.')[0]] = angle
+
+    return HB_dict
+#calculate salt bridges
+def salt_bridge(path, pdb_files=None):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    from ThERMOS import distance
+    import re
+    
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    Salt_bridges = dict()
+    
+    for pdb_file in pdb_files:
+        Asp_Glu_array = np.empty((0, 4))
+        Lys_Arg_His_array = np.empty((0, 4))
+        
+        with open(os.path.join(path, str(pdb_file))) as f:
+            for line in f:
+                #line = line.replace('-', '  -')
+               #line = re.sub(r'([A])(\d)', r'\1 \2', line)
+                if line.startswith('ATOM'):
+                    if ('ASP' in line and 'OD' in line) or ('GLU' in line and 'OE' in line):
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = line_array.astype('float64')
+                        Asp_Glu_array = np.append(Asp_Glu_array, line_array, axis = 0)
+                    if ('LYS' in line and 'NZ' in line) or ('ARG' in line and 'NH' in line) or ('HIS' in line and 'NE' in line) or ('HIS' in line and 'ND' in line):
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = line_array.astype('float64')
+                        Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
+
+            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
+    return Salt_bridges
+#calculate van der Waals interactions
+def VdW_interaction(path, pdb_files=None, by_atom = False):
+    import numpy as np
+    import os
+    import scipy
+    from scipy.spatial.distance import cdist
+    import re
+    
+    from ThERMOS import distance
+    from ThERMOS import cluster_calc
+    from ThERMOS import intersect_vol
+    
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    VdW_cluster = {}
+    VdW_volume = {}
+
+    for pdb_file in pdb_files:
+        with open(os.path.join(path, str(pdb_file))) as f:
+            Atom_array = np.empty((0, 4))
+            #VdW_radii = {'C': 3.1, 'N': 2.95, 'O': 2.96} # Van der Waals radii in Angstrom enlarged by watermolecule radius 1.4 A (https://academic.oup.com/nar/article/49/W1/W559/6279848#267025710)
+            #C_C = 6.2
+            #C_N = 6.05
+            #C_O = 6.06
+            #N_N = 5.9
+            #N_O = 5.91
+            #O_O = 5.92
+            X_array = np.array([[]])
+            Atom_list = ['C', 'N', 'O']
+            for line in f:
+                #line = line.replace('-', '  -')
+                #line = re.sub(r'([A])(\d)', r'\1 \2', line)
+                line = line.strip()
+                if line.startswith('ATOM'):
+                    if ('LEU' in line and line[12:17].strip() in Atom_list) or ('VAL' in line and line[12:17].strip() in Atom_list) or ('ILE' in line and line[12:17].strip() in Atom_list):
+                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
+                        line_array = line_array.astype('float64')
+                        Atom_array = np.append(Atom_array, line_array, axis = 0)
+                        if 'C' in line[12:17]:
+                            X_array = np.append(X_array, int('0'))
+                        elif 'N' in line[12:17]:
+                            X_array = np.append(X_array, int('1'))
+                        elif 'O' in line[12:17]:
+                            X_array = np.append(X_array, int('2'))
+            
+            Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
+            
+            Atom_distance = np.nan_to_num(Atom_distance)
+            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance, by_atom)
+            
+            Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
+            Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
+            VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
+            
+    return VdW_cluster, VdW_volume
+#Force field calculations (AMBER) for hydrogen atom prediction
+def pdb2pqr(input_path, output_path,pdb_files=None):
+    import os
+    if pdb_files is None:
+        pdb_files = [f for f in os.listdir(input_path) if f.endswith('.pdb')]
+    if isinstance(pdb_files, str):
+        pdb_files = [pdb_files]
+    for pdb_file in pdb_files:
+        name = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
+        os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
+
+
+#Functions used for mutation analysis
+#calculat weighted difference between ideal and actual values, used as an internal scoring function during mutation
 def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:dict, sec_prediction, sort = True, sum_only = False):
     """
     Calculates the weighted sum of deviations for a given amino acid ('aa') based on positive and negative features.
@@ -449,71 +667,7 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
         return sum_dev, sorted_keys
     else:
         return sum_dev, WT_weight #sum_dev is a positive value of all deviations, higher values indicate a worse fit
-
-def mut_apply(AA_list, Mut_list):
-    """
-    Applies a list of mutations to a list of amino acids.
-
-    Args:
-        AA_list (list): A list containing the original amino acid sequence.
-        Mut_list (list): A list of mutation strings defining the substitutions to be applied in the form ('WT-POS-MUT')
-
-    Returns:
-        list: A new list containing the amino acid sequence after applying the mutations.
-    """
-    if len(Mut_list) > 0:
-        if 'M' in Mut_list[0]:
-            Mut_list = Mut_list[1:]
-        for n in Mut_list:
-            AA_pos = int(n.split('-')[1]) - 1
-            AA_mut = n.split('-')[2]
-            AA_list[AA_pos] = AA_mut
-        return AA_list
-    else:
-        return(print('Mut list is empty'))
-
-def mut_live_test (AA_list, Mut_list, pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, sec_prediction):
-    from ThERMOS import mut_apply
-    from ThERMOS import diff_weighted
-    AAs = ''.join(AA_list)
-    WT_sum, WT_diff = diff_weighted(pos_corr, neg_corr, AAs, ideal_pos_value, ideal_neg_value, sec_prediction)
-    AA_mut = mut_apply(AA_list, Mut_list)
-    AA_muts = ''.join(AA_mut)
-    MUT_sum, WT_diff = diff_weighted(pos_corr, neg_corr, AA_muts, ideal_pos_value, ideal_neg_value, sec_prediction)
-    Diff = abs(WT_sum) - abs(MUT_sum) # calculates the difference between the weighted sum of deviations before and after the mutation
-    
-    # if the difference is positive the mutation is beneficial
-    # if Diff is negative the mutation is not beneficial
-    return Diff #The higher the difference the better the mutation
-    
-def mutator_rand(AAs_list, substitutions, threshhold = 100, seed = 0):
-    from itertools import product
-    import random
-    count = 0
-    random.seed(seed)
-    
-    keys = list(substitutions.keys())
-    random.shuffle(keys)
-    # Create a list of lists, each containing tuples of (position, substitution)
-    while count < threshhold:
-
-        subst_options = [[(pos, subst) for subst in [AAs_list[int(pos)-1]] + substitutions[pos]] for pos in keys]
-        if not subst_options:
-            break
-        
-        for combination in product(*subst_options):
-            # Start with the original protein sequence
-            prot_variation = list(AAs_list)
-            # Apply each substitution in the combination
-            for pos, subst in combination:
-                prot_variation[int(pos)-1] = subst
-            # Yield the new protein variation as a string
-            yield ''.join(prot_variation)
-            count += 1
-            
-            if count >= threshhold:
-                break
-                    
+#calculates functional amino acids based on tertiary interactions                    
 def functional_aa(input_path, pdb_file, output_path, df=False):
     """
     This function selects atoms involved in various interactions (salt bridges, hydrogen bonds, 
@@ -605,230 +759,7 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
         return Prot_df
     else:
         return Protein_array
-
-def SASA_calc(path, pdb_files=None):
-    from Bio.PDB import PDBParser
-    from Bio.PDB.SASA import ShrakeRupley
-    import os
-    SASA_dict = {}
-    if pdb_files is None:
-        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
-    if isinstance(pdb_files, str):
-        pdb_files = [pdb_files]
-    for pdb_file in pdb_files:
-        struct = PDBParser(QUIET=1).get_structure(pdb_file.split('-')[1], os.path.join(path, str(pdb_file)))
-        ShrakeRupley().compute(struct, level = 'S')
-        SASA_dict[pdb_file.split('-')[1]] = struct.sasa
-    return SASA_dict
-
-def pdb2pqr(input_path, output_path,pdb_files=None):
-#INFO:Please cite:  Jurrus E, et al.  Improvements to the APBS biomolecular solvation software suite.  Protein Sci 27 112-128 (2018).
-#INFO:Please cite:  Dolinsky TJ, et al.  PDB2PQR: expanding and upgrading automated preparation of biomolecular structures for molecular simulations. Nucleic Acids Res 35 W522-W525 (2007).
-    import os
-    if pdb_files is None:
-        pdb_files = [f for f in os.listdir(input_path) if f.endswith('.pdb')]
-    if isinstance(pdb_files, str):
-        pdb_files = [pdb_files]
-    for pdb_file in pdb_files:
-        name = f'{(pdb_file.split('.')[0]).split('-')[1]}.pqr'
-        os.system(f'pdb2pqr "{os.path.join(input_path, str(pdb_file))}" "{os.path.join(output_path, name)}" -ff={'AMBER'} --noop')
-
-def salt_bridge(path, pdb_files=None): #https://www.bioinformation.net/003/002800032008.pdf
-    import numpy as np
-    import os
-    import scipy
-    from scipy.spatial.distance import cdist
-    from ThERMOS import distance
-    import re
-    
-    if pdb_files is None:
-        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
-    if isinstance(pdb_files, str):
-        pdb_files = [pdb_files]
-    Salt_bridges = dict()
-    
-    for pdb_file in pdb_files:
-        Asp_Glu_array = np.empty((0, 4))
-        Lys_Arg_His_array = np.empty((0, 4))
-        
-        with open(os.path.join(path, str(pdb_file))) as f:
-            for line in f:
-                #line = line.replace('-', '  -')
-               #line = re.sub(r'([A])(\d)', r'\1 \2', line)
-                if line.startswith('ATOM'):
-                    if ('ASP' in line and 'OD' in line) or ('GLU' in line and 'OE' in line):
-                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
-                        line_array = line_array.astype('float64')
-                        Asp_Glu_array = np.append(Asp_Glu_array, line_array, axis = 0)
-                    if ('LYS' in line and 'NZ' in line) or ('ARG' in line and 'NH' in line) or ('HIS' in line and 'NE' in line) or ('HIS' in line and 'ND' in line):
-                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
-                        line_array = line_array.astype('float64')
-                        Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
-
-            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
-    return Salt_bridges
-
-def VdW_interaction(path, pdb_files=None, by_atom = False):
-    import numpy as np
-    import os
-    import scipy
-    from scipy.spatial.distance import cdist
-    import re
-    
-    from ThERMOS import distance
-    from ThERMOS import cluster_calc
-    from ThERMOS import intersect_vol
-    
-    if pdb_files is None:
-        pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
-    if isinstance(pdb_files, str):
-        pdb_files = [pdb_files]
-    VdW_cluster = {}
-    VdW_volume = {}
-
-    for pdb_file in pdb_files:
-        with open(os.path.join(path, str(pdb_file))) as f:
-            Atom_array = np.empty((0, 4))
-            #VdW_radii = {'C': 3.1, 'N': 2.95, 'O': 2.96} # Van der Waals radii in Angstrom enlarged by watermolecule radius 1.4 A (https://academic.oup.com/nar/article/49/W1/W559/6279848#267025710)
-            #C_C = 6.2
-            #C_N = 6.05
-            #C_O = 6.06
-            #N_N = 5.9
-            #N_O = 5.91
-            #O_O = 5.92
-            X_array = np.array([[]])
-            Atom_list = ['C', 'N', 'O']
-            for line in f:
-                #line = line.replace('-', '  -')
-                #line = re.sub(r'([A])(\d)', r'\1 \2', line)
-                line = line.strip()
-                if line.startswith('ATOM'):
-                    if ('LEU' in line and line[12:17].strip() in Atom_list) or ('VAL' in line and line[12:17].strip() in Atom_list) or ('ILE' in line and line[12:17].strip() in Atom_list):
-                        line_array = np.array([[line[7:12].strip(), line[27:38].strip(), line[39:46].strip(), line[47:54].strip()]])
-                        line_array = line_array.astype('float64')
-                        Atom_array = np.append(Atom_array, line_array, axis = 0)
-                        if 'C' in line[12:17]:
-                            X_array = np.append(X_array, int('0'))
-                        elif 'N' in line[12:17]:
-                            X_array = np.append(X_array, int('1'))
-                        elif 'O' in line[12:17]:
-                            X_array = np.append(X_array, int('2'))
-            
-            Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
-            
-            Atom_distance = np.nan_to_num(Atom_distance)
-            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance, by_atom)
-            
-            Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
-            Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
-            VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
-            
-    return VdW_cluster, VdW_volume
-                
-def H_bond_calc(path, pqr_files=None):
-    #https://www.sciencedirect.com/science/article/pii/S2665928X20300246?via%3Dihub#sec2
-    import numpy as np
-    import os
-    import scipy
-    from scipy.spatial.distance import cdist
-    from ThERMOS import distance
-    from ThERMOS import angle_calc
-    
-    Donor_dict = {'GLN': [('NE2', 'HE21'), ('NE2', 'HE22')], 
-                'GLU': [('OE2', 'HE2')], 
-                'ASP': [('OD2', 'HD2')], 
-                'ASN': [('ND2', 'HD21'), ('ND2', 'HD22')], 
-                'HIS': [('NE2', 'HE2'), ('ND1', 'HD2')], 
-                'LYS': [('NZ', 'HZ1'), ('NZ', 'HZ2'), ('NZ', 'HZ3')], 
-                'ARG': [('NE', 'HE'), ('NH1', 'HH11'), ('NH1', 'HH12'), ('NH2', 'HH21'), ('NH2', 'HH22')], 
-                'SER': [('OG', 'HG')], 
-                'THR': [('OG1', 'HG1')], 
-                'TRP': [('NE1', 'HE1')], 
-                'TYR': [('OH', 'HH')]}
-
-    Acceptor_dict = {'GLN': [('OE1')], 
-                'ASP': [('OD1'), ('OD2')], 
-                'ASN': ['OD1'], 
-                'GLU': [('OE1'), ('OE2')], 
-                'SER': ['OG'], 
-                'THR': ['OG1']}
-    HB_dict = {}
-    if pqr_files is None:
-        pqr_files = [f for f in os.listdir(path) if f.endswith('.pqr')]
-    if isinstance(pqr_files, str):
-        pqr_files = [pqr_files]
-    for pqr_file in pqr_files:
-        with open(os.path.join(path, str(pqr_file))) as f:
-            Donor_array = np.empty((0, 4))
-            H_array = np.empty((0, 4))
-            Acceptor_array = np.empty((0, 4))
-            aa_cache = []
-            atom_cache = []
-            for line in f:
-                line = line.replace('-', '  -')
-                if line.startswith('ATOM'):
-                    if not aa_cache:
-                        aa_cache.append(line.split()[3])
-                        aa_cache.append(line.split()[4])
-                        atom_cache.append(line)
-                    elif aa_cache[1] == line.split()[4]:
-                        atom_cache.append(line)
-                    elif aa_cache[1] != line.split()[4]:
-                        if aa_cache[0] in Donor_dict.keys():
-                            sub_donor = Donor_dict[aa_cache[0]] #extracts list (with tupels of Donor, Hydrogen) for the amino acid
-                            for n in sub_donor:
-                                donor_match = [entry for entry in atom_cache if n[0] in entry]
-                                h_match = [entry for entry in atom_cache if n[1] in entry]
-                                if donor_match and h_match:
-                                    d_line = np.array([[int(donor_match[0].split()[1]), float(donor_match[0].split()[5]), float(donor_match[0].split()[6]), float(donor_match[0].split()[7])]]) 
-                                    h_line = np.array([[int(h_match[0].split()[1]), float(h_match[0].split()[5]), float(h_match[0].split()[6]), float(h_match[0].split()[7])]])
-                                    Donor_array = np.append(Donor_array, d_line, axis=0)
-                                    H_array = np.append(H_array, h_line, axis=0)
-                        if aa_cache[0] in Acceptor_dict.keys():
-                            sub_acc = Acceptor_dict[aa_cache[0]] #extracts list of acceptors for the amino acid
-                            for n in sub_acc:
-                                acc_match = [entry for entry in atom_cache if n in entry]               
-                                a_line = np.array([[int(acc_match[0].split()[1]), float(acc_match[0].split()[5]), float(acc_match[0].split()[6]), float(acc_match[0].split()[7])]])
-                                Acceptor_array = np.append(Acceptor_array, a_line, axis=0)
-                        aa_cache = []
-                        atom_cache = [] 
-
-        angle = angle_calc(Donor_array, H_array, Acceptor_array)
-        HB_dict[str(pqr_file).split('.')[0]] = angle
-
-    return HB_dict
-                                            
-def AA2s4pred (directory_S4pred, output_path, AA_seq, prot, remove_file = None):
-    import os
-    from ThERMOS import fasparse
-    os.getcwd()
-    # call s4pred and create fas file
-    fastapath = os.path.join(output_path,f'{prot}.fasta')
-    faspath = os.path.join(output_path,f'{prot}.fas')
-    abs_fasta = os.path.abspath(fastapath)
-    abs_fas = os.path.abspath(faspath)
-
-    if os.path.isfile(fastapath):
-        print(f'fasta file already exists')
-    else:
-        with open(os.path.join(output_path,f'{prot}.fasta'), "w") as fasta_file:
-            fasta_file.write(f">{prot}\n{AA_seq}\n")
-        
-    if os.path.isfile(faspath):
-        print('fas file already exists')
-    else:
-        os.chdir(directory_S4pred)
-        os.system(f'python3 run_model.py "{abs_fasta}" > "{abs_fas}"')
-        os.chdir('../../')
-     
-    #read fas file and   
-    sec_pred = fasparse(abs_fas)
-    if remove_file:
-        os.remove(fastapath)
-        os.remove(faspath) 
-
-    return sec_pred 
-
+#Calculate free amino acids, that are not involved in tertiary interactions
 def free_aa (path, pdb_file, functional_aa):
     """
     Identifies and collects free amino acids from a PDB file.
@@ -885,7 +816,71 @@ def free_aa (path, pdb_file, functional_aa):
                     aa_line = np.array([[str(prot_name), AA_dict[line.split()[3]], line.split()[5]]])
                     free_aa = np.append(free_aa, aa_line, axis=0)
     return free_aa                
+#Apply mutations (WT-pos-mut) to a given amino acid sequence
+def mut_apply(AA_list, Mut_list):
+    """
+    Applies a list of mutations to a list of amino acids.
 
+    Args:
+        AA_list (list): A list containing the original amino acid sequence.
+        Mut_list (list): A list of mutation strings defining the substitutions to be applied in the form ('WT-POS-MUT')
+
+    Returns:
+        list: A new list containing the amino acid sequence after applying the mutations.
+    """
+    if len(Mut_list) > 0:
+        if 'M' in Mut_list[0]:
+            Mut_list = Mut_list[1:]
+        for n in Mut_list:
+            AA_pos = int(n.split('-')[1]) - 1
+            AA_mut = n.split('-')[2]
+            AA_list[AA_pos] = AA_mut
+        return AA_list
+    else:
+        return(print('Mut list is empty'))
+#Used to test during mutation if the mutation is beneficial
+def mut_live_test (AA_list, Mut_list, pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, sec_prediction):
+    from ThERMOS import mut_apply
+    from ThERMOS import diff_weighted
+    AAs = ''.join(AA_list)
+    WT_sum, WT_diff = diff_weighted(pos_corr, neg_corr, AAs, ideal_pos_value, ideal_neg_value, sec_prediction)
+    AA_mut = mut_apply(AA_list, Mut_list)
+    AA_muts = ''.join(AA_mut)
+    MUT_sum, WT_diff = diff_weighted(pos_corr, neg_corr, AA_muts, ideal_pos_value, ideal_neg_value, sec_prediction)
+    Diff = abs(WT_sum) - abs(MUT_sum) # calculates the difference between the weighted sum of deviations before and after the mutation
+    
+    # if the difference is positive the mutation is beneficial
+    # if Diff is negative the mutation is not beneficial
+    return Diff #The higher the difference the better the mutation
+#randomly creates mutants based on possible substitutions    
+def mutator_rand(AAs_list, substitutions, threshhold = 100, seed = 0):
+    from itertools import product
+    import random
+    count = 0
+    random.seed(seed)
+    
+    keys = list(substitutions.keys())
+    random.shuffle(keys)
+    # Create a list of lists, each containing tuples of (position, substitution)
+    while count < threshhold:
+
+        subst_options = [[(pos, subst) for subst in [AAs_list[int(pos)-1]] + substitutions[pos]] for pos in keys]
+        if not subst_options:
+            break
+        
+        for combination in product(*subst_options):
+            # Start with the original protein sequence
+            prot_variation = list(AAs_list)
+            # Apply each substitution in the combination
+            for pos, subst in combination:
+                prot_variation[int(pos)-1] = subst
+            # Yield the new protein variation as a string
+            yield ''.join(prot_variation)
+            count += 1
+            
+            if count >= threshhold:
+                break
+#rational mutation for thermo stability improvement
 def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:dict, conserv_substitution, ideal_pos_value, ideal_neg_value, cutoff, sec_prediction):
     """
     Generates a list of potential mutations based on deviations and correlations.
@@ -1198,7 +1193,7 @@ def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:d
 
                              
     return AA_mut_list, mut_list
-
+#reduce possible mutatioons, based on secondary structure involvement
 def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, seed):
     """
     Reduces the possible substitutions for each amino acid based on secondary structure predictions.
@@ -1244,6 +1239,9 @@ def Subst_reducer(sec_pred:list, conserv_subst_dict:dict, free_AA_dict:dict, see
         
     return Possible_subst
 
+
+
+#Main mutation function
 def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=True, iterations=100, cutoff_value = -0.005, threshhold = 10000, seed = 0, remove_files = None):
     """
     This function performs protein mutation analysis to improve the thermal stability of a protein, with minimal changes to the structure
@@ -1279,7 +1277,6 @@ def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=Tr
     from ThERMOS import free_aa
     from ThERMOS import Subst_reducer
     from ThERMOS import pdb2AA
-    from ThERMOS import ArraySlice
     from ThERMOS import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, conserv_subst, non_conservative_substitutions
 
     from SPARC import SPARC
@@ -1399,7 +1396,6 @@ def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=Tr
                 best_Mut_dev = Mut_dev  
                 best_possible_mutations = possible_mutations #get list of best mutations (AA-POS-AA), depreciated, bcs random mutator doesn't output this
                 best_iteration = str(k+1)
-                #aa_available = ArraySlice(aa_available, possible_mutations) #updates available aminoacids, so that each aminoacid can only be mutated once
                 
             elif Mut_dev[0][0] == prev_Mut_dev[0][0] and abs(Mut_dev[0][1]-prev_Mut_dev[0][1]) < 0.001:
                 break
@@ -1434,7 +1430,7 @@ def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=Tr
     Improvement = WT_dev_sum - best_Mut_dev_sum
     
     return [(wt_sparc, best_SPARC), (aa_list, best_Mut_prot_list), (WT_dev_sum, best_Mut_dev_sum)]
-
+#Main Mutation reducer function
 def ThERMless(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False, ):
     from ThERMOS import diff_weighted
     from ThERMOS import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value
