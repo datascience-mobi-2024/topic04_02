@@ -24,6 +24,7 @@ The file **[function.py](https://github.com/datascience-mobi-2024/topic04_02/blo
 Basic usage of the Protein class is demonstrated with two example proteins in **[example_usage.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/example_usage.ipynb)**.
 ## Requirements
 #### Packages
+All required packages can be activated by creating a virtual environment and using **[requirements](https://github.com/datascience-mobi-2024/topic04_02/blob/main/requirements.txt)**
 The following packages are required for our code, versions may not have to be the exact same, but numpy should be the given version:
 | Package         | Version   |
 |-----------------|-----------|
