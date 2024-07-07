@@ -1,5 +1,5 @@
-# Topic 4, Group 2: 
-**Decoding Protein Stability - a Data-Driven Approach for Predictive Modeling of Enhanced Thermostability**
+# Topic 4, Group 2: Decoding Protein Stability - a Data-Driven Approach for Predictive Modeling of Enhanced Thermostability
+
 ## Authors
 Preet Shah, Maximilian Vassen, Marik Müller, Tobias Kreusel
 ## Supervisors
