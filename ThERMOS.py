@@ -490,6 +490,10 @@ def salt_bridge(path, pdb_files=None):
     Salt_bridges = dict()
     
     for pdb_file in pdb_files:
+        if '-' in str(pdb_file):
+            name = str(pdb_file.split('-')[1])
+        else:
+            name = str(pdb_file.split('.')[0])
         Asp_Glu_array = np.empty((0, 4))
         Lys_Arg_His_array = np.empty((0, 4))
         
@@ -507,7 +511,7 @@ def salt_bridge(path, pdb_files=None):
                         line_array = line_array.astype('float64')
                         Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
 
-            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
+            Salt_bridges[name] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
     return Salt_bridges
 #calculate van der Waals interactions
 def VdW_interaction(path, pdb_files=None, by_atom = False):
@@ -529,6 +533,10 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
     VdW_volume = {}
 
     for pdb_file in pdb_files:
+        if '-' in str(pdb_file):
+            name = str(pdb_file.split('-')[1])
+        else:
+            name = str(pdb_file.split('.')[0])
         with open(os.path.join(path, str(pdb_file))) as f:
             Atom_array = np.empty((0, 4))
             #VdW_radii = {'C': 3.1, 'N': 2.95, 'O': 2.96} # Van der Waals radii in Angstrom enlarged by watermolecule radius 1.4 A (https://academic.oup.com/nar/article/49/W1/W559/6279848#267025710)
@@ -559,11 +567,11 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             
             Atom_distance = np.nan_to_num(Atom_distance)
-            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance, by_atom)
+            VdW_cluster[name] = cluster_calc(Atom_distance, by_atom)
             
             Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
             Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
-            VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
+            VdW_volume[name] = Atom_volume
             
     return VdW_cluster, VdW_volume
 #Force field calculations (AMBER) for hydrogen atom prediction
@@ -708,9 +716,9 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
         pdb2pqr(input_path, output_path, pdb_file)
 
     # Calculate atom features
-    Salt_bridge = salt_bridge(input_path, pdb_file)
+    Salt_bridge = salt_bridge(output_path, pqr_file)
     H_bond = H_bond_calc(output_path, pqr_file)
-    VdW_clust, VdW_vol = VdW_interaction(input_path, pdb_file, by_atom = True)
+    VdW_clust, VdW_vol = VdW_interaction(output_path, pqr_file, by_atom = True)
     
     # extract the values for the proteins from the dictionary and delete atoms that dont have a feature (if applicable)
     Salt_bridge = remove_nan(Salt_bridge[prot_name])
