@@ -24,7 +24,8 @@ The file **[function.py](https://github.com/datascience-mobi-2024/topic04_02/blo
 Basic usage of the Protein class is demonstrated with two example proteins in **[example_usage.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/example_usage.ipynb)**.
 ## Requirements
 #### Packages
-The following packages are required for our code, versions may not have to be the exact same, but numpy should be the given version:
+All required packages can be activated by creating a virtual environment using **[requirements.txt](https://github.com/datascience-mobi-2024/topic04_02/blob/main/requirements.txt)**.\
+The packages required for our code can be also installed manually. We did not encouter any issues with newer package versions, except for the numpy package, where not all versions work with S4pred:
 | Package         | Version   |
 |-----------------|-----------|
 | biopython       | 1.83      |
