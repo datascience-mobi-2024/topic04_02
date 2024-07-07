@@ -570,7 +570,7 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
             VdW_cluster[name] = cluster_calc(Atom_distance, by_atom)
             
             Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
-            Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
+            Atom_volume = intersect_vol(Atom_distance_nan, 5.54, 5.54)#solvent enlarged radii 6, 0.46 to account for minimum overlap area of 10 Angstrom^2 
             VdW_volume[name] = Atom_volume
             
     return VdW_cluster, VdW_volume
