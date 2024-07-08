@@ -190,7 +190,6 @@ def fasparse(faspath):
 #Secondary structure prediction using S4pred                                            
 def AA2s4pred (directory_S4pred, output_path, AA_seq, prot, remove_file = None):
     import os
-    from ThERMOS import fasparse
     os.getcwd()
     # call s4pred and create fas file
     fastapath = os.path.join(output_path,f'{prot}.fasta')
@@ -295,7 +294,6 @@ def distance (array1, array2, cutoff = None, remove_nan=True):
         raise ValueError('remove_nan must be either True or False')
 #Calculate angles between donor-hydrogen-acceptor atoms for H-bond calculation        
 def angle_calc(Donor_array, H_array, Acceptor_array):
-    from ThERMOS import distance
     import numpy as np
     import warnings
     
@@ -408,8 +406,6 @@ def H_bond_calc(path, pqr_files=None):
     import os
     import scipy
     from scipy.spatial.distance import cdist
-    from ThERMOS import distance
-    from ThERMOS import angle_calc
     
     Donor_dict = {'GLN': [('NE2', 'HE21'), ('NE2', 'HE22')], 
                 'GLU': [('OE2', 'HE2')], 
@@ -480,7 +476,6 @@ def salt_bridge(path, pdb_files=None):
     import os
     import scipy
     from scipy.spatial.distance import cdist
-    from ThERMOS import distance
     import re
     
     if pdb_files is None:
@@ -490,10 +485,6 @@ def salt_bridge(path, pdb_files=None):
     Salt_bridges = dict()
     
     for pdb_file in pdb_files:
-        if '-' in str(pdb_file):
-            name = str(pdb_file.split('-')[1])
-        else:
-            name = str(pdb_file.split('.')[0])
         Asp_Glu_array = np.empty((0, 4))
         Lys_Arg_His_array = np.empty((0, 4))
         
@@ -511,7 +502,7 @@ def salt_bridge(path, pdb_files=None):
                         line_array = line_array.astype('float64')
                         Lys_Arg_His_array = np.append(Lys_Arg_His_array, line_array, axis = 0)
 
-            Salt_bridges[name] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
+            Salt_bridges[str(pdb_file).split('-')[1]] = distance(Asp_Glu_array, Lys_Arg_His_array, 4)
     return Salt_bridges
 #calculate van der Waals interactions
 def VdW_interaction(path, pdb_files=None, by_atom = False):
@@ -521,9 +512,6 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
     from scipy.spatial.distance import cdist
     import re
     
-    from ThERMOS import distance
-    from ThERMOS import cluster_calc
-    from ThERMOS import intersect_vol
     
     if pdb_files is None:
         pdb_files = [f for f in os.listdir(path) if f.endswith('.pdb')]
@@ -533,10 +521,6 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
     VdW_volume = {}
 
     for pdb_file in pdb_files:
-        if '-' in str(pdb_file):
-            name = str(pdb_file.split('-')[1])
-        else:
-            name = str(pdb_file.split('.')[0])
         with open(os.path.join(path, str(pdb_file))) as f:
             Atom_array = np.empty((0, 4))
             #VdW_radii = {'C': 3.1, 'N': 2.95, 'O': 2.96} # Van der Waals radii in Angstrom enlarged by watermolecule radius 1.4 A (https://academic.oup.com/nar/article/49/W1/W559/6279848#267025710)
@@ -567,11 +551,11 @@ def VdW_interaction(path, pdb_files=None, by_atom = False):
             Atom_distance = distance(Atom_array, Atom_array, 6, remove_nan = False)
             
             Atom_distance = np.nan_to_num(Atom_distance)
-            VdW_cluster[name] = cluster_calc(Atom_distance, by_atom)
+            VdW_cluster[str(pdb_file).split('-')[1]] = cluster_calc(Atom_distance, by_atom)
             
             Atom_distance_nan = np.where(Atom_distance==0, np.nan, Atom_distance)
-            Atom_volume = intersect_vol(Atom_distance_nan, 5.54, 5.54)#solvent enlarged radii 6, 0.46 to account for minimum overlap area of 10 Angstrom^2 
-            VdW_volume[name] = Atom_volume
+            Atom_volume = intersect_vol(Atom_distance_nan, 6, 6)
+            VdW_volume[str(pdb_file).split('-')[1]] = Atom_volume
             
     return VdW_cluster, VdW_volume
 #Force field calculations (AMBER) for hydrogen atom prediction
@@ -606,7 +590,6 @@ def diff_weighted(feature_pos, feature_neg, aa:str, ideal_pos:dict, ideal_neg:di
             - sorted_keys (list, optional): If sort=True, a list of features sorted by their weighted deviation (highest first).
                 - WT_weight (dict, optional): If sort=False, a dictionary containing the weighted deviation for each feature.
     """
-    from ThERMOS import rel_aa_comp
     import operator
 
     AA_polar = 'NQSTY'
@@ -694,11 +677,6 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
     """
     
     #import necessary functions
-    from ThERMOS import salt_bridge
-    from ThERMOS import H_bond_calc
-    from ThERMOS import VdW_interaction
-    from ThERMOS import pdb2pqr
-    from ThERMOS import remove_nan
     import os
     import numpy as np
     import pandas as pd
@@ -716,9 +694,9 @@ def functional_aa(input_path, pdb_file, output_path, df=False):
         pdb2pqr(input_path, output_path, pdb_file)
 
     # Calculate atom features
-    Salt_bridge = salt_bridge(output_path, pqr_file)
+    Salt_bridge = salt_bridge(input_path, pdb_file)
     H_bond = H_bond_calc(output_path, pqr_file)
-    VdW_clust, VdW_vol = VdW_interaction(output_path, pqr_file, by_atom = True)
+    VdW_clust, VdW_vol = VdW_interaction(input_path, pdb_file, by_atom = True)
     
     # extract the values for the proteins from the dictionary and delete atoms that dont have a feature (if applicable)
     Salt_bridge = remove_nan(Salt_bridge[prot_name])
@@ -848,8 +826,6 @@ def mut_apply(AA_list, Mut_list):
         return(print('Mut list is empty'))
 #Used to test during mutation if the mutation is beneficial
 def mut_live_test (AA_list, Mut_list, pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, sec_prediction):
-    from ThERMOS import mut_apply
-    from ThERMOS import diff_weighted
     AAs = ''.join(AA_list)
     WT_sum, WT_diff = diff_weighted(pos_corr, neg_corr, AAs, ideal_pos_value, ideal_neg_value, sec_prediction)
     AA_mut = mut_apply(AA_list, Mut_list)
@@ -908,10 +884,6 @@ def mutator_rational(AA_list:list, free_AA, deviation, pos_corr:dict, neg_corr:d
     """
     
     import itertools
-    from ThERMOS import rel_aa_comp
-    from ThERMOS import mut_apply
-    from ThERMOS import mut_live_test
-    from ThERMOS import AA_polar_neutral
     
     pos_corr_list = list(pos_corr.keys())
     neg_corr_list = list(neg_corr.keys())
@@ -1276,17 +1248,9 @@ def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=Tr
     """
     #import functions
 
-    from ThERMOS import AA2s4pred
-    from ThERMOS import diff_weighted
-    from ThERMOS import mutator_rand
-    from ThERMOS import mutator_rational
-    from ThERMOS import functional_aa
-    from ThERMOS import free_aa
-    from ThERMOS import Subst_reducer
-    from ThERMOS import pdb2AA
-    from ThERMOS import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value, conserv_subst, non_conservative_substitutions
 
-    from SPARC import SPARC
+
+    from .SPARC import SPARC
     
     from heapq import heappop, heappush
     import heapq    
@@ -1439,10 +1403,7 @@ def ThERMOS(pdb_path, pdb_file, pqr_output_path, locked_aa_pos=None, Deep_mut=Tr
     return [(wt_sparc, best_SPARC), (aa_list, best_Mut_prot_list), (WT_dev_sum, best_Mut_dev_sum)]
 #Main Mutation reducer function
 def ThERMless(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, min_diff = 0, sec_prediction=None, fast=False, ):
-    from ThERMOS import diff_weighted
-    from ThERMOS import pos_corr, neg_corr, ideal_pos_value, ideal_neg_value
-    from ThERMOS import AA2s4pred
-    from SPARC import SPARC
+    from .SPARC import SPARC
     from heapq import heappop, heappush, nlargest, heapify
 
     import os
