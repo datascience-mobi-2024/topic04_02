@@ -24,11 +24,11 @@ The full report can be found **[here](https://github.com/datascience-mobi-2024/t
 #### 2. Code Organisation
 * Data Processing:
   * **[dataframe_creation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/dataframe_creation.ipynb)** Cleans and processes data, including feature calculation for protein structures. This script also generates the "prokaryotes_348columns.csv" dataframe stored in the data folder created after setup
-* Analysis Neotebooks
+* Analysis Notebooks
     * **[PCA_and_regression.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/PCA_and_regression.ipynb)**: Explores general correlations, performs PCA analysis, and trains/evaluates the regression model
     * **[essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/essential_proteins.ipynb)**: Analyses essential proteins, particularly for *E. coli* and *B. subtilis*
-    * **[Mutation_results_essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/Mutation_results_essential_proteins.ipynb)** applies the **[proteinclass.py].(https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)** functions on essential proteins
-* Core Functions
+    * **[Mutation_results_essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/Mutation_results_essential_proteins.ipynb)** applies the **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)** functions on essential proteins
+* Core Functions included in [Protein](https://github.com/datascience-mobi-2024/topic04_02/tree/main/Protein) module
     * **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)**: Defines a user-friendly Protein class that combines functionalities from:
         * **[SPARC](https://github.com/datascience-mobi-2024/topic04_02/blob/main/SPARC.py)**: Predicting melting point based on amino acid sequence
         * **[ThERMOS and ThERMless](https://github.com/datascience-mobi-2024/topic04_02/blob/main/ThERMOS.py)**: Prediction of stabilising mutations for improved melting point based on pdb file
