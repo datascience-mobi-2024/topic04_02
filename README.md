@@ -32,7 +32,9 @@ The full report can be found **[here](https://github.com/datascience-mobi-2024/t
     * **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)**: Defines a user-friendly Protein class that combines functionalities from:
         * **[SPARC](https://github.com/datascience-mobi-2024/topic04_02/blob/main/SPARC.py)**: Predicting melting point based on amino acid sequence
         * **[ThERMOS and ThERMless](https://github.com/datascience-mobi-2024/topic04_02/blob/main/ThERMOS.py)**: Prediction of stabilising mutations for improved melting point based on pdb file
+        * Further functions for secondary and tertiary structure analysis contained within SPARC and ThERMOS
     * **[function.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/function.py)** contains miscellaneous functions but is mostly deprecated.
+
 #### 3. Example
 * **[demonstration.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/demonstration.ipynb)** Demonstrates basic usage of the protein class with two examplatory pdb files.
 
