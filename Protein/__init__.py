@@ -19,7 +19,11 @@ urls = {"https://drive.google.com/uc?export=download&id=1N1Z-oy5obzkASoe2L94sWxZ
         "https://drive.google.com/uc?export=download&id=1S7TvKjm-dqm2E6LyZGZJw2lIi3uJutU5": os.path.abspath("./data/essential_proteins_prediction_merged.csv"),
         "https://drive.google.com/uc?export=download&id=1qLkD_ui7bSS2kiHQPS0dwVeT8tnp9XiA": os.path.abspath("./data/essential_proteins.csv"),
         "https://drive.google.com/uc?export=download&id=1McFlKIsZQD7DkvVYNSqHIU401BLlM7q9": os.path.abspath("./data/prokaryotes_322columns.csv"),
-        "https://drive.google.com/uc?export=download&id=1NaX3aK3goCVUfYTR4hR75VIULGSMOA8-": os.path.abspath("./data/prokaryotes_all.csv"),}
+        "https://drive.google.com/uc?export=download&id=1NaX3aK3goCVUfYTR4hR75VIULGSMOA8-": os.path.abspath("./data/prokaryotes_all.csv"),
+        "https://drive.google.com/uc?export=download?id=1wXnMcb5o1O1zq62jtmMbltPfg2TlsDTR": os.path.abspath("./data/cross-species.csv"),
+        "https://drive.google.com/uc?export=download?id=1ZRUTQMvaExtyn1QV_-IueVQjV2cKCwN7": os.path.abspath("./data/data_prokaryotes.csv"),
+        "https://drive.google.com/uc?export=download?id=14YfJk7YLbO0ChDgg6IZSPLosKE--vo_i": os.path.abspath("./data/identifiers.fasta"),
+        "https://drive.google.com/uc?export=download?id=1TK0EA1BL9Wmye2b8AUKOIM9g4Nls6p3e": os.path.abspath("./data/Unique_ID_mappings.tsv"),}
 for url, output_path in urls.items():
     if not os.path.exists(output_path):
         print(f"Downloading {output_path}")
