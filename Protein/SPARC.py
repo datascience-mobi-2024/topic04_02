@@ -26,6 +26,7 @@ def SPARC(data:str, name, datapath, directoryS4, removefiles = True):
     from sklearn.decomposition import PCA
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
     from sklearn.metrics import mean_squared_error, r2_score
+    os.chdir('..')
     model1 = joblib.load('./data/gbr_model1.joblib')
     scaler1 = joblib.load('./data/scaler1.joblib')
     pca1 = joblib.load('./data/pca1.joblib')

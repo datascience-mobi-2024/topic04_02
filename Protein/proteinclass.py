@@ -79,3 +79,23 @@ class Protein:
                 removed_mutations.append(f'{self.mutatedseq[n]}{n+1}')
         self.removed_mutations = removed_mutations
         return [self.mut_mp_reduced, self.mut_seq_reduced, self.mutationlist_reduced]
+    def H_Bond_calc(self):
+        from .ThERMOS import H_bond_calc
+        outputhbond = H_bond_calc(self.PDB)
+        self.H_bonds = outputhbond
+        return self.H_bonds
+    def SASA(self, pdbpath = './data/pdbs'):
+        from .ThERMOS import SASA_calc
+        outputsasa = SASA_calc(path = pdbpath, pdb_files=self.PDB)
+        self.SASA = outputsasa
+        return self.SASA
+    def salt_bridge(self):
+        from .ThERMOS import salt_bridge
+        outputsb = salt_bridge(path = './data', pdb_files= self.PDB)
+        self.salt_bridges = outputsb
+        return self.salt_bridges
+    def hydrophobic(self):
+        from .ThERMOS import VdW_interaction
+        outputhc = VdW_interaction(path = './data', pdb_files= self.PDB)
+        self.hydrophobic_clusters = outputhc
+        return self.hydrophobic_clusters
