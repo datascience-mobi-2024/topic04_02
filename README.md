@@ -18,7 +18,7 @@ The full report can be found **[here](https://github.com/datascience-mobi-2024/t
 
 ## Repository structure
 #### 1. Automatic Setup
-* The Initialisation Notebook (**[initialisation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/initialisation.ipynb)**) creates the necessary directories, downloads essential dataframes, and two example PDB files. A zip file containing all the PDBs we used can be downloaded **[here](https://drive.google.com/file/d/1XFvu7OAfv0gtHU_4MM0vuoPFaZVmM7T2/view?usp=sharing)** (256 MB zipped, ~ 1 GB unzipped) (obtained from [AlphaFold DB](https://alphafold.ebi.ac.uk/)).
+* The required directory structure to use our code is automatically created upon importing the module **[Protein]()**. It also downloads essential dataframes, other dependencies and two example PDB files. A zip file containing all the PDBs we used can be downloaded **[here](https://drive.google.com/file/d/1XFvu7OAfv0gtHU_4MM0vuoPFaZVmM7T2/view?usp=sharing)** (256 MB zipped, ~ 1 GB unzipped) (obtained from [AlphaFold DB](https://alphafold.ebi.ac.uk/)).
 * **[requirements.txt](https://github.com/datascience-mobi-2024/topic04_02/blob/main/requirements.txt)** contains all required packages. It is recommended to set it up in a virtual enrivonment
 
 #### 2. Code Organisation
