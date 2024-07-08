@@ -1447,4 +1447,4 @@ def ThERMless(mut_temp, wt_temp, wt_protein, mut_protein, name, cutoff = 0.9, mi
         if best_mut_str == wt_str:
             break
     
-    return (best_mut_str, best_mut_diff, sparc_screen[0][0])
+    return (best_mut_str, best_mut_diff, sparc_screen[0][0]) 
