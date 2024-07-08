@@ -17,14 +17,25 @@ Extending protein thermostability has significant applications in research and i
 The full report can be found **[here](https://github.com/datascience-mobi-2024/topic04_02/blob/main/Decoding_Protein_Stability_-%20_a_Data-Driven_Approach_for_Predictive_Modeling_of_Enhanced_Thermostability.pdf)**
 
 ## Repository structure
-To use any of our code, a specific directory structure is required. The directories are automatically created upon importing the module [Protein]() for the first time. This also downloads our important dataframes and two example PDB files. A zip file containing all the PDBs we used can be downloaded **[here](https://drive.google.com/file/d/1XFvu7OAfv0gtHU_4MM0vuoPFaZVmM7T2/view?usp=sharing)** (256 MB zipped, ~ 1 GB unzipped) ([Source](https://alphafold.ebi.ac.uk/)).\
-All of our data cleanup and processing has been collected in **[dataframe_creation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/dataframe_creation.ipynb)**, this also includes the feature calculation for primary, secondary and tertiary structure. The resulting dataframe 'prokaryotes_348columns.csv' is also provided in the data folder created by running initialisation.\
-Our results and plots for general correlations and PCA analysis as well as the training and evaluation of our regression model can be found in **[PCA_and_regression.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/PCA_and_regression.ipynb)**.\
-Our analyses of essential proteins (especially in *E. coli* and *B. subtilis*) are collected in **[essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/essential_proteins.ipynb)**.\
-Our main functions **[SPARC](https://github.com/datascience-mobi-2024/topic04_02/blob/main/SPARC.py)**, **[ThERMOS and ThERMless](https://github.com/datascience-mobi-2024/topic04_02/blob/main/ThERMOS.py)** are defined in python scripts to be usable from anywhere. They are also all combined into a user friendly class inside the Protein module called Protein defined in **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)**.\
-Our functions are applied on the proteins identified as essential in **[Mutation_results_essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/Mutation_results_essential_proteins.ipynb)**.\
-The file **[function.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/function.py)** contains miscellaneous functions but is mostly deprecated.\
-Basic usage of the Protein class/module is demonstrated with two example proteins in **[demonstration.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/demonstration.ipynb)**.
+#### 1. Automatic Setup
+* The Initialisation Notebook (**[initialisation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/initialisation.ipynb)**) creates the necessary directories, downloads essential dataframes, and two example PDB files. A zip file containing all the PDBs we used can be downloaded **[here](https://drive.google.com/file/d/1XFvu7OAfv0gtHU_4MM0vuoPFaZVmM7T2/view?usp=sharing)** (256 MB zipped, ~ 1 GB unzipped) ([Source](https://alphafold.ebi.ac.uk/)).
+* **[requirements.txt](https://github.com/datascience-mobi-2024/topic04_02/blob/main/requirements.txt)** contains all required packages. It is recommended to set it up in a virtual enrivonment
+
+#### 2. Code Organisation
+* Data Processing:
+  * **[dataframe_creation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/dataframe_creation.ipynb)** Cleans and processes data, including feature calculation for protein structures. This script also generates the "prokaryotes_348columns.csv" dataframe stored in the data folder created by **[initialisation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/initialisation.ipynb)**
+* Analysis Neotebooks
+    * **[PCA_and_regression.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/PCA_and_regression.ipynb)**: Explores general correlations, performs PCA analysis, and trains/evaluates the regression model.
+    * **[essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/essential_proteins.ipynb)**: Analyses essential proteins, particularly for *E. coli* and *B. subtilis*.
+    * **[Mutation_results_essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/Mutation_results_essential_proteins.ipynb)** applies the **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)** functios on essential proteins
+* Core Code
+    * **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)**: Defines a user-friendly Protein class that combines functionalities from:
+        * **[SPARC](https://github.com/datascience-mobi-2024/topic04_02/blob/main/SPARC.py)**: Predicting melting point based on amino acid sequence
+        * **[ThERMOS and ThERMless](https://github.com/datascience-mobi-2024/topic04_02/blob/main/ThERMOS.py)**: Prediction of stabilising mutations for improved melting point based on pdb file
+    * **[function.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/function.py)** contains miscellaneous functions but is mostly deprecated.
+#### 3. Example
+* **[demonstration.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/demonstration.ipynb)** Demonstrates basic usage of the protein class with two examplatory pdb files.
+
 ## Requirements
 #### Packages
 All required packages can be activated by creating a virtual environment using **[requirements.txt](https://github.com/datascience-mobi-2024/topic04_02/blob/main/requirements.txt)**.\
