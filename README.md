@@ -18,25 +18,25 @@ The full report can be found **[here](https://github.com/datascience-mobi-2024/t
 
 ## Repository structure
 #### 1. Automatic Setup
-* The required directory structure to use our code is automatically created upon importing the module **[Protein]()**. It also downloads essential dataframes, other dependencies and two example PDB files. A zip file containing all the PDBs we used can be downloaded **[here](https://drive.google.com/file/d/1XFvu7OAfv0gtHU_4MM0vuoPFaZVmM7T2/view?usp=sharing)** (256 MB zipped, ~ 1 GB unzipped) (obtained from [AlphaFold DB](https://alphafold.ebi.ac.uk/)).
+* The required directory structure to use our code is automatically created upon importing the module **[Protein]()**. It also downloads essential dataframes, other dependencies and two example PDB files. A zip file containing all the PDBs we used can be downloaded **[here](https://drive.google.com/file/d/1XFvu7OAfv0gtHU_4MM0vuoPFaZVmM7T2/view?usp=sharing)** (256 MB zipped, ~ 1 GB unzipped) (obtained from [AlphaFold DB](https://alphafold.ebi.ac.uk/))
 * **[requirements.txt](https://github.com/datascience-mobi-2024/topic04_02/blob/main/requirements.txt)** contains all required packages. It is recommended to set it up in a virtual enrivonment
 
 #### 2. Code Organisation
 * Data Processing:
-  * **[dataframe_creation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/dataframe_creation.ipynb)** Cleans and processes data, including feature calculation for protein structures. This script also generates the "prokaryotes_348columns.csv" dataframe stored in the data folder created by **[initialisation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/initialisation.ipynb)**
+  * **[dataframe_creation.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/dataframe_creation.ipynb)** Cleans and processes data, including feature calculation for protein structures. This script also generates the "prokaryotes_348columns.csv" dataframe stored in the data folder created after setup
 * Analysis Neotebooks
-    * **[PCA_and_regression.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/PCA_and_regression.ipynb)**: Explores general correlations, performs PCA analysis, and trains/evaluates the regression model.
-    * **[essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/essential_proteins.ipynb)**: Analyses essential proteins, particularly for *E. coli* and *B. subtilis*.
-    * **[Mutation_results_essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/Mutation_results_essential_proteins.ipynb)** applies the **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)** functios on essential proteins
+    * **[PCA_and_regression.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/PCA_and_regression.ipynb)**: Explores general correlations, performs PCA analysis, and trains/evaluates the regression model
+    * **[essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/essential_proteins.ipynb)**: Analyses essential proteins, particularly for *E. coli* and *B. subtilis*
+    * **[Mutation_results_essential_proteins.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/Mutation_results_essential_proteins.ipynb)** applies the **[proteinclass.py].(https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)** functions on essential proteins
 * Core Functions
     * **[proteinclass.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/proteinclass.py)**: Defines a user-friendly Protein class that combines functionalities from:
         * **[SPARC](https://github.com/datascience-mobi-2024/topic04_02/blob/main/SPARC.py)**: Predicting melting point based on amino acid sequence
         * **[ThERMOS and ThERMless](https://github.com/datascience-mobi-2024/topic04_02/blob/main/ThERMOS.py)**: Prediction of stabilising mutations for improved melting point based on pdb file
         * Further functions for secondary and tertiary structure analysis contained within SPARC and ThERMOS
-    * **[function.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/function.py)** contains miscellaneous functions but is mostly deprecated.
+    * **[function.py](https://github.com/datascience-mobi-2024/topic04_02/blob/main/function.py)** contains miscellaneous functions but is mostly deprecated
 
 #### 3. Example
-* **[demonstration.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/demonstration.ipynb)** Demonstrates basic usage of the protein class with two examplatory pdb files.
+* **[demonstration.ipynb](https://github.com/datascience-mobi-2024/topic04_02/blob/main/demonstration.ipynb)** Demonstrates basic usage of the protein class with two examplatory pdb files
 
 ## Requirements
 #### Packages
